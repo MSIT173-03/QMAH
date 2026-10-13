@@ -15,9 +15,7 @@ import { parseSocialMarkup } from '../../social-markup';
   template: `
     <ng-template #tpl let-nodes>
       @for (node of nodes; track $index) {
-        @if (node.t === 'text') {
-          {{ node.v }}
-        } @else {
+        @if (node.t === 'text') {<ng-container>{{ node.v }}</ng-container>} @else {
           @switch (node.n) {
             @case ('b') { <strong><ng-container *ngTemplateOutlet="tpl; context: { $implicit: node.c }" /></strong> }
             @case ('i') { <em><ng-container *ngTemplateOutlet="tpl; context: { $implicit: node.c }" /></em> }

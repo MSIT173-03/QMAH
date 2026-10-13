@@ -582,12 +582,12 @@
 @keyframes social-pop { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: none; } }
 @keyframes social-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes social-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-.qmah-social-page :is(.social-post-card, .social-event-card, .social-announcement-list > .social-panel) {
+.qmah-social-page :is(.social-event-card, .social-announcement-list > .social-panel) {
   animation: social-rise 360ms cubic-bezier(.22, 1, .36, 1) both;
 }
-.qmah-social-page :is(.social-post-card, .social-event-card, .social-announcement-list > .social-panel):nth-child(2) { animation-delay: 50ms; }
-.qmah-social-page :is(.social-post-card, .social-event-card, .social-announcement-list > .social-panel):nth-child(3) { animation-delay: 100ms; }
-.qmah-social-page :is(.social-post-card, .social-event-card, .social-announcement-list > .social-panel):nth-child(n + 4) { animation-delay: 150ms; }
+.qmah-social-page :is(.social-event-card, .social-announcement-list > .social-panel):nth-child(2) { animation-delay: 50ms; }
+.qmah-social-page :is(.social-event-card, .social-announcement-list > .social-panel):nth-child(3) { animation-delay: 100ms; }
+.qmah-social-page :is(.social-event-card, .social-announcement-list > .social-panel):nth-child(n + 4) { animation-delay: 150ms; }
 .qmah-social-page .btn,
 .social-modal .btn { transition: transform 140ms cubic-bezier(.22, 1, .36, 1), box-shadow 160ms ease, background-color 160ms ease; }
 .qmah-social-page .btn:hover:not(:disabled),
@@ -674,6 +674,12 @@
 .social-swatch[data-color='blue'] { background: #2f5aa8; }
 .social-swatch[data-color='gold'] { background: #c58b12; }
 .social-swatch[data-color='gray'] { background: #6b6f6a; }
+.social-swatch[data-color='orange'] { background: #d2691e; }
+.social-swatch[data-color='olive'] { background: #6b7a2a; }
+.social-swatch[data-color='teal'] { background: #1f8a8a; }
+.social-swatch[data-color='purple'] { background: #7b4fb0; }
+.social-swatch[data-color='pink'] { background: #d0547f; }
+.social-swatch[data-color='ink'] { background: #1f2321; }
 .social-post-form__hint { display: block; margin-top: 6px; color: var(--qmah-muted); font-size: 13px; line-height: 1.5; }
 .social-post-form__toolbar .social-post-form__hint { display: none; }
 .social-fmt--u { text-decoration: underline; text-underline-offset: 3px; }
@@ -734,3 +740,15 @@
 .qmah-social-page .social-tag--kind[data-kind='PLAYER'] { background: color-mix(in srgb, #b8862a 18%, transparent); color: #8a5f12; }
 :host-context([data-theme='qmahdark']) .qmah-social-page .social-tag--kind[data-kind='OFFICIAL'] { color: #ff8a80; }
 :host-context([data-theme='qmahdark']) .qmah-social-page .social-tag--kind[data-kind='PLAYER'] { color: #e6b94d; }
+
+/* 貼文頁作者列的頭像放大，旁邊接稱號牌 */
+.qmah-social-page .social-panel > .social-meta.social-icon-label { --user-avatar-size: 2.5rem; gap: 10px; font-size: 0.9375rem; }
+
+/* 卡片作者列：稱號牌跟在名字後面，過長時截斷，窄螢幕隱藏，不撐開卡片 */
+.social-post-card__author { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.social-post-card__author .social-author-title { flex: 0 1 auto; max-width: 9em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 420px) { .social-post-card__author .social-author-title { display: none; } }
+
+/* 稱號牌：金色徽章樣式，一眼和看板標籤區分 */
+.qmah-social-page .social-author-title { padding: 0 8px; border: 1px solid color-mix(in srgb, var(--qmah-ink) 22%, transparent); border-radius: 4px; background: transparent; color: color-mix(in srgb, var(--qmah-ink) 72%, transparent); font-weight: 500; letter-spacing: 0.08em; line-height: 1.7; }
+:host-context([data-theme='qmahdark']) .qmah-social-page .social-author-title { border-color: color-mix(in srgb, #fff 26%, transparent); color: color-mix(in srgb, #fff 72%, transparent); }

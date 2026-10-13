@@ -4,6 +4,7 @@
       <svg lucideArrowLeft aria-hidden="true" focusable="false"></svg>
       返回貼文列表
     </a>
+  <app-social-width-toggle />
   }
 
 @if (loading) {
@@ -49,8 +50,8 @@
     } @else {
       <h1 class="social-panel__title">{{ post.title }}</h1>
       <p class="social-meta social-icon-label">
-        <app-user-avatar [userId]="post.publisherType === 'COMMUNITY' ? post.userId : null" />
-        @if (post.publisherType === 'COMMUNITY' && post.userId) {
+        <app-user-avatar [userId]="post.userId" />
+        @if (post.userId) {
           <a class="social-author-link" [routerLink]="['/social/members', post.userId]">{{ post.displayName || '匿名會員' }}</a>
           @if (post.authorTitle) {
             <span class="social-tag social-author-title">{{ post.authorTitle }}</span>
@@ -63,9 +64,9 @@
       @if (attachedMedia(post).length > 0) {
         <div class="social-gallery" [class.social-gallery--primary]="post.mediaLayout === 'PRIMARY'" [attr.data-count]="attachedMedia(post).length > 4 ? 'many' : attachedMedia(post).length">
           @for (media of attachedMedia(post); track media.id) {
-            <a class="social-gallery__item" [href]="media.url" target="_blank" rel="noopener" [attr.aria-label]="'開啟圖片：' + (media.altText || post.title)">
+            <button type="button" class="social-gallery__item" (click)="lbIndex = $index" [attr.aria-label]="'放大圖片：' + (media.altText || post.title)">
               <img [src]="media.url" [alt]="media.altText || post.title" loading="lazy" />
-            </a>
+            </button>
           }
         </div>
       }
@@ -79,9 +80,9 @@
       @if (attachedMedia(post).length > 0) {
         <div class="social-gallery" [attr.data-count]="attachedMedia(post).length > 4 ? 'many' : attachedMedia(post).length">
           @for (media of attachedMedia(post); track media.id) {
-            <a class="social-gallery__item" [href]="media.url" target="_blank" rel="noopener" [attr.aria-label]="'開啟圖片：' + (media.altText || post.title)">
+            <button type="button" class="social-gallery__item" (click)="lbIndex = $index" [attr.aria-label]="'放大圖片：' + (media.altText || post.title)">
               <img [src]="media.url" [alt]="media.altText || post.title" loading="lazy" />
-            </a>
+            </button>
           }
         </div>
       }
@@ -89,6 +90,7 @@
     }
 
   </article>
+  <app-social-lightbox [images]="lightboxImages()" [(index)]="lbIndex" />
 
   @if (artifact; as art) {
     <!-- 文物卡：圖片、說明與資訊，沿用圖鑑的卡片語彙；玩家沒有該文物時全部顯示問號 -->
@@ -110,7 +112,8 @@
           <div><dt>尺寸</dt><dd>{{ art.unlocked ? (art.sizeText || '—') : '？' }}</dd></div>
         </dl>
         <p class="social-artifact__desc">{{ art.unlocked ? (art.description || '這件文物目前沒有說明。') : '收藏這件文物後，才會顯示圖片、說明與資訊。' }}</p>
-        <div class="social-artifact__actions">
+      </div>
+      <div class="social-artifact__actions">
           @if (art.unlocked) {
             <a class="btn btn-sm btn-outline" [routerLink]="['/artifact-list']" [queryParams]="{ focus: art.artifactId }">到圖鑑查看</a>
           } @else if (art.hasUniversalKey) {
@@ -119,7 +122,6 @@
             <a class="btn btn-sm btn-ghost" [routerLink]="['/artifact-list']" [queryParams]="{ focus: art.artifactId }">到圖鑑看看</a>
           }
         </div>
-      </div>
     </aside>
   }
 
@@ -147,6 +149,7 @@
           <div class="social-comment__main">
             <div class="social-comment__head">
               <a class="social-author-link social-comment__author" [routerLink]="['/social/members', comment.userId]">{{ comment.displayName || '匿名會員' }}</a>
+              @if (comment.authorTitle) { <span class="social-tag social-author-title">{{ comment.authorTitle }}</span> }
               <time class="social-meta" [attr.datetime]="comment.createdAt">{{ comment.createdAt | date: 'yyyy-MM-dd HH:mm' }}</time>
               <span class="social-comment__spacer"></span>
               <div class="dropdown dropdown-end">

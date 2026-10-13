@@ -1,3 +1,4 @@
+import { SocialWidthToggleComponent } from '../../../shared/components/social-width-toggle/social-width-toggle';
 import { ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { UserAvatarComponent } from '../../../shared/components/user-avatar/user-avatar';
 import { CommonModule } from '@angular/common';
@@ -15,18 +16,21 @@ import { SocialEditorComponent } from '../../../shared/components/social-editor/
 import { SocialMediaLayout, SocialMediaManagerComponent } from '../../../shared/components/social-media-manager/social-media-manager';
 import { SocialPostContentComponent } from '../../../shared/components/social-post-content/social-post-content';
 import { SocialEventContentComponent } from '../../../shared/components/social-event-content/social-event-content';
-import { demoComment, isDemoAdmin } from '../social-demo';
+import { SocialLightboxComponent } from '../../../shared/components/social-lightbox/social-lightbox';
+import { demoComment } from '../social-demo';
 import { boardLabel } from '../social-labels';
 import { LucideArrowLeft, LucideBookmark, LucideEllipsis, LucideFlag, LucideMessageCircle, LucidePencil, LucideTrash2 } from '@lucide/angular';
 
 @Component({
   selector: 'app-post-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ReportModalComponent, SocialPostContentComponent, SocialEventContentComponent, SocialEditorComponent, SocialMediaManagerComponent, LucideArrowLeft, LucideBookmark, LucideEllipsis, LucideFlag, LucideMessageCircle, LucidePencil, LucideTrash2, UserAvatarComponent],
+  imports: [SocialWidthToggleComponent, CommonModule, FormsModule, RouterLink, ReportModalComponent, SocialPostContentComponent, SocialEventContentComponent, SocialEditorComponent, SocialMediaManagerComponent, LucideArrowLeft, LucideBookmark, LucideEllipsis, LucideFlag, LucideMessageCircle, LucidePencil, LucideTrash2, UserAvatarComponent, SocialLightboxComponent],
   templateUrl: './post-detail.html',
   styleUrls: ['../social-common.scss', './post-detail.scss']
 })
 export class PostDetailComponent implements OnChanges {
+  lbIndex: number | null = null;
+  lightboxImages() { return this.post ? this.attachedMedia(this.post).map((m) => ({ url: m.url, alt: m.altText || this.post!.title })) : []; }
   // 路由參數 :id 由 app.config.ts 的 withComponentInputBinding() 自動綁定
   @Input() id!: string;
   // 嵌入其他頁面（例如活動詳情）時為 true：不顯示「返回貼文列表」，也不撐出獨立頁面的外距，使用者不必離開原頁面。
@@ -89,10 +93,9 @@ export class PostDetailComponent implements OnChanges {
       next: (post) => {
         this.post = post;
         this.loadArtifact(post);
-        this.prefillDemoComment();
         this.loading = false;
         this.cdr.detectChanges();
-        this.scrollToCommentsIfRequested();
+        this.openComposerIfRequested();
       },
       error: (err: HttpErrorResponse) => {
         console.error('取得貼文失敗:', err);
@@ -112,10 +115,19 @@ export class PostDetailComponent implements OnChanges {
     });
   }
 
-  /** 從貼文牆點「N 則留言」進來（網址帶 #comments）時，直接捲到留言區。 */
-  private scrollToCommentsIfRequested(): void {
-    if (this.embedded || !this.router.url.includes('#comments')) return;
-    setTimeout(() => document.getElementById('post-comments')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+  /**
+   * 從貼文牆點「N 則留言」進來（網址帶 ?compose=1）：捲到留言區，留言框先帶入一則預設留言並取得焦點，但不送出。
+   * 點標題或卡片進來則停在正文最上方，留言框維持空白。
+   */
+  private openComposerIfRequested(): void {
+    if (this.embedded || this.router.parseUrl(this.router.url).queryParams['compose'] !== '1') return;
+    if (!this.newComment.content.trim()) this.newComment = { content: demoComment() };
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      const section = document.getElementById('post-comments');
+      section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      section?.querySelector('textarea')?.focus({ preventScroll: true });
+    }, 80);
   }
 
   /** 已經含有格式標記的留言編輯時直接開啟進階模式，否則維持純文字。 */
@@ -124,13 +136,6 @@ export class PostDetailComponent implements OnChanges {
   }
 
   // ---- 編輯／刪除自己的貼文 ----
-
-  // 管理員示範用：留言框是空的就先放一則示範留言，報告時只要按「送出留言」。
-  private prefillDemoComment(): void {
-    if (isDemoAdmin(this.meApi.me()) && !this.newComment.content.trim()) {
-      this.newComment = { content: demoComment() };
-    }
-  }
 
   // daisyUI dropdown 靠焦點開合；選了項目後主動失焦，選單才會收起來。
   closeMenu(): void {
@@ -258,7 +263,6 @@ export class PostDetailComponent implements OnChanges {
     this.socialApi.createComment(this.post.id, this.newComment).pipe(finalize(() => { this.pendingAction = false; this.cdr.detectChanges(); })).subscribe({
       next: () => {
         this.newComment = { content: '' };
-        this.prefillDemoComment();
         this.loadPost();
       },
       error: (err: HttpErrorResponse) => {

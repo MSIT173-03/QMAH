@@ -4,7 +4,7 @@ import { demoPost, isDemoAdmin } from '../social-demo';
 import { UserAvatarComponent } from '../../../shared/components/user-avatar/user-avatar';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { catchError, forkJoin, map, of, Subscription } from 'rxjs';
 
@@ -105,7 +105,7 @@ export class PostsComponent implements OnInit, OnDestroy {
     if (!this.postSentinel || typeof IntersectionObserver === 'undefined') return;
     this.postObserver = new IntersectionObserver(entries => {
       if (entries.some(entry => entry.isIntersecting) && !this.loadError) this.loadMorePosts();
-    }, { rootMargin: '0px 0px 400px 0px' });
+    }, { rootMargin: '0px 0px 1800px 0px' });
     this.postObserver.observe(this.postSentinel);
   }
   get hasMorePosts(): boolean { return this.loadedPage < this.totalPages && this.posts.length < this.totalCount; }
@@ -249,6 +249,14 @@ export class PostsComponent implements OnInit, OnDestroy {
 
   private lastLoadedAt = 0;
   private readonly route = inject(ActivatedRoute, { optional: true });
+  private readonly router = inject(Router);
+
+  /** 點卡片空白處＝點標題：開啟貼文正文。連結、按鈕與圖片輪播自己的操作不算。 */
+  openCard(event: MouseEvent, postId: string): void {
+    if ((event.target as HTMLElement).closest('a, button, input, textarea, select, [role="button"], app-social-card-gallery')) return;
+    if (window.getSelection()?.toString()) return;
+    void this.router.navigate(['/social/posts', postId]);
+  }
   private readonly boardStore = inject(SocialBoardsStore);
 
   ngOnInit(): void {

@@ -97,7 +97,7 @@
 
 /* 貼文圖片：沒插入內文的圖片收成相簿。文字為主＝小縮圖列；圖片為主＝置頂大圖（第一張）＋其餘縮圖。 */
 .social-gallery { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); margin: 12px 0; }
-.social-gallery__item { display: block; overflow: hidden; border: 1px solid var(--qmah-border); border-radius: 10px; background: var(--qmah-surface-muted); }
+.social-gallery__item { display: block; width: 100%; padding: 0; cursor: zoom-in; font: inherit; overflow: hidden; border: 1px solid var(--qmah-border); border-radius: 10px; background: var(--qmah-surface-muted); }
 .social-gallery__item img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; transition: transform 240ms ease; }
 .social-gallery__item:hover img { transform: scale(1.03); }
 .social-gallery__item:focus-visible { outline: 2px solid var(--qmah-social-action); outline-offset: 2px; }
@@ -119,3 +119,13 @@
 .social-bookmark.is-on svg { fill: currentColor; }
 .social-bookmark:focus-visible { outline: 2px solid var(--qmah-social-action); outline-offset: 2px; }
 .social-bookmark + .social-post-head__menu { margin-left: 0; }
+
+/* 文物卡：圖片、資訊、動作三欄，按鈕靠右置中，不再掉在說明文字下面 */
+.qmah-social-page .social-artifact { display: grid; grid-template-columns: 150px minmax(0, 1fr) auto; align-items: center; gap: 22px; padding: 18px 22px; }
+.qmah-social-page .social-artifact__image { width: 150px; height: 150px; max-width: none; aspect-ratio: auto; }
+.qmah-social-page .social-artifact__facts { grid-template-columns: repeat(4, minmax(0, auto)); justify-content: start; gap: 6px 28px; }
+.qmah-social-page .social-artifact__desc { -webkit-line-clamp: 3; }
+.qmah-social-page .social-artifact__actions { align-self: center; justify-content: flex-end; }
+.qmah-social-page .social-artifact__actions .btn { min-height: 44px; padding-inline: 20px; white-space: nowrap; }
+@media (max-width: 900px) { .qmah-social-page .social-artifact { grid-template-columns: 110px minmax(0, 1fr); } .qmah-social-page .social-artifact__image { width: 110px; height: 110px; } .qmah-social-page .social-artifact__facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } .qmah-social-page .social-artifact__actions { grid-column: 1 / -1; justify-content: stretch; } .qmah-social-page .social-artifact__actions .btn { width: 100%; } }
+@media (max-width: 520px) { .qmah-social-page .social-artifact { grid-template-columns: 1fr; } .qmah-social-page .social-artifact__image { margin-inline: auto; } }

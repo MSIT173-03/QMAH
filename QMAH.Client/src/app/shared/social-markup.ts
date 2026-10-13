@@ -23,16 +23,16 @@ export type SocialTagName = 'b' | 'i' | 'u' | 's' | 'h' | 'quote' | 'list' | 'si
 export const SOCIAL_SIZES: readonly SocialSize[] = ['small', 'large', 'xlarge'];
 export const SOCIAL_COLORS: readonly { color: SocialColor; label: string }[] = [
   { color: 'red', label: '紅色' },
-  { color: 'brown', label: '棕色' },
-  { color: 'green', label: '綠色' },
-  { color: 'blue', label: '藍色' },
-  { color: 'gold', label: '金色' },
-  { color: 'gray', label: '灰色' },
   { color: 'orange', label: '橘色' },
+  { color: 'gold', label: '金色' },
   { color: 'olive', label: '橄欖綠' },
+  { color: 'green', label: '綠色' },
   { color: 'teal', label: '青綠色' },
+  { color: 'blue', label: '藍色' },
   { color: 'purple', label: '紫色' },
   { color: 'pink', label: '粉紅色' },
+  { color: 'brown', label: '棕色' },
+  { color: 'gray', label: '灰色' },
   { color: 'ink', label: '墨黑色' },
 ];
 
@@ -168,7 +168,28 @@ export function parseSocialMarkup(source: string | null | undefined): SocialNode
     finishItem(top);
     close();
   }
-  return root.c;
+  return tidy(root.c);
+}
+
+const isBlockNode = (n: SocialNode | undefined): boolean => !!n && n.t === 'el' && (BLOCK_TAGS.has(n.n) || n.n === 'hr');
+
+/** 區塊（標題、清單、引用、分隔線）前後的換行由區塊自己的間距負責，不再多出空行；清單項目頭尾的換行也去掉。 */
+function tidy(nodes: SocialNode[]): SocialNode[] {
+  nodes.forEach((node, i) => {
+    if (node.t === 'text') {
+      if (isBlockNode(nodes[i + 1])) node.v = node.v.replace(/\n+$/, '');
+      if (isBlockNode(nodes[i - 1])) node.v = node.v.replace(/^\n+/, '');
+    } else {
+      node.c = tidy(node.c);
+      if (node.items) node.items = node.items.map((item) => {
+        const trimmed = tidy(item);
+        const last = trimmed[trimmed.length - 1];
+        if (last?.t === 'text') last.v = last.v.replace(/\n+$/, '');
+        return trimmed;
+      });
+    }
+  });
+  return nodes.filter((node) => node.t !== 'text' || node.v !== '');
 }
 
 function plain(nodes: SocialNode[]): string {

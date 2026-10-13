@@ -98,3 +98,22 @@ a { color: var(--qmah-social-accent, var(--qmah-terracotta)); text-decoration: u
 .is-spoiler.is-revealed { background: color-mix(in srgb, var(--qmah-ink) 10%, transparent); color: inherit; cursor: auto; }
 
 .is-img { display: block; max-width: min(100%, 420px); max-height: 360px; margin: 0.5rem 0; border-radius: 10px; border: 1px solid var(--qmah-border); object-fit: contain; background: var(--qmah-surface); }
+
+/* 閱讀版面加強：公告與長文以段落標題、清單與提示框分層，不再是一整片純文字。 */
+.social-post-content { line-height: 1.85; }
+p { margin: 0 0 0.7rem; }
+h3 {
+  display: flex; align-items: center; gap: 10px; margin: 1.6rem 0 0.7rem; padding: 0; border-radius: 0; background: none;
+  color: var(--qmah-ink); font-size: 1.125rem; font-weight: 800; letter-spacing: 0.02em; line-height: 1.4;
+}
+h3::before { flex: none; width: 5px; height: 1.15em; border-radius: 3px; background: linear-gradient(180deg, var(--qmah-social-action), color-mix(in srgb, var(--qmah-social-action) 45%, #e8a63a)); content: ''; }
+h3:first-child { margin-top: 0.4rem; }
+.bullet { margin: 0 0 0.9rem; padding: 4px 0; }
+.bullet li { margin: 0 0 0.5rem; padding: 0 0 0 1.4rem; }
+.bullet li::before { top: 0.72em; left: 0.2rem; width: 7px; height: 7px; border-radius: 50%; background: var(--qmah-social-action); content: ''; }
+blockquote {
+  margin: 1rem 0; padding: 0.9rem 1.1rem; border: 1px solid color-mix(in srgb, var(--qmah-social-action) 22%, var(--qmah-border)); border-left: 5px solid var(--qmah-social-action);
+  border-radius: 12px; background: color-mix(in srgb, var(--qmah-social-action) 7%, var(--qmah-surface)); color: var(--qmah-ink); font-size: 0.9688rem;
+}
+strong { color: var(--qmah-ink); }
+hr { margin: 1.4em 0; border-top: 1px dashed var(--qmah-border); }

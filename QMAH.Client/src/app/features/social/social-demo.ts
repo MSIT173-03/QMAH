@@ -11,21 +11,22 @@ export function demoPost(): CreateSocialPostRequest {
   return {
     postType: 'POST',
     boardCode: 'GENERAL',
-    title: '分享今天的一點心得',
+    title: '週末看展的三個小發現',
     content:
-      '[size=large][b]大家好[/b][/size]，想跟大家分享最近的一點心得與觀察。\n\n' +
-      '[h]今天的三個重點[/h]\n' +
+      '[size=large][b]週末看展的三個小發現[/b][/size]\n' +
+      '走了一趟特展，把當天的筆記整理成幾點，歡迎補充，也歡迎指正。\n\n' +
+      '[h]我的三個重點[/h]\n' +
       '[list]\n' +
-      '[*][b]觀察細節[/b]：多看一眼，常會發現[color=red]意想不到[/color]的線索\n' +
-      '[*][i]對照資料[/i]：用[u]不同來源[/u]互相印證，結論更可靠\n' +
-      '[*][color=blue]記錄下來[/color]：寫成筆記，日後回頭看更有收穫\n' +
+      '[*][b]先看整體，再看細節[/b]：退後一步看器形，再靠近看[color=red]紋飾與接合處[/color]\n' +
+      '[*][i]對照資料[/i]：用[u]說明牌與圖鑑[/u]互相印證，結論比較可靠\n' +
+      '[*][color=blue]當場記下來[/color]：回家再查，常會發現漏看的地方\n' +
       '[/list]\n' +
-      '[quote]好的觀察，從放慢腳步開始。[/quote]\n' +
+      '[quote]慢慢看，通常比快快看更有收穫。[/quote]\n' +
       '[hr]\n' +
-      '[center][color=gold][b]也想聽聽你們的看法[/b][/color][/center]\n' +
-      '歡迎留言交流、互相補充！[s]不用客氣[/s]\n\n' +
-      '[size=small][color=gray]小提醒：下面是劇透內容，點一下才會顯示[/color][/size]\n' +
-      '[spoiler]其實我最大的收穫是：慢慢看，比快快看更有趣。[/spoiler]',
+      '[center][b]你最近看到什麼有趣的細節？[/b][/center]\n\n' +
+      '留言聊聊吧，也歡迎指出我看錯的地方。\n\n' +
+      '[size=small][color=gray]最後的小結論放在下面，點一下才會顯示。[/color][/size]\n' +
+      '[spoiler]其實這次最大的收穫，是學會把「看到的」和「推測的」分開記。[/spoiler]',
     mediaIds: []
   };
 }

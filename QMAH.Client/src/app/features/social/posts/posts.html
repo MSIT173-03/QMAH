@@ -208,13 +208,13 @@
   </ng-template>
 
   <ng-template #postCard let-post>
-  <article class="social-post-card" [attr.data-board]="post.boardCode" [attr.data-post-id]="post.id" [class.social-post-card--text]="!post.coverImageUrl">
+  <article class="social-post-card" (click)="openCard($event, post.id)" [attr.data-board]="post.boardCode" [attr.data-post-id]="post.id" [class.social-post-card--text]="!post.coverImageUrl">
     <div class="social-post-card__body">
       <header class="social-post-card__head">
-        <app-user-avatar [userId]="post.publisherType === 'COMMUNITY' ? post.userId : null" />
+        <app-user-avatar [userId]="post.userId" />
         <div class="social-post-card__who">
           <p class="social-post-card__author">
-            @if (post.publisherType === 'COMMUNITY' && post.userId) {
+            @if (post.userId) {
               <a class="social-author-link" [routerLink]="['/social/members', post.userId]">{{ post.displayName || '匿名會員' }}</a>
             } @else {
               {{ post.displayName || '匿名會員' }}
@@ -246,7 +246,7 @@
       }
       <div class="social-post-card__footer">
         <p class="social-post-card__stats">
-          <a class="social-icon-label social-post-card__comments" [routerLink]="['/social/posts', post.id]" fragment="post-comments" [attr.aria-label]="'查看 ' + post.title + ' 的留言'">
+          <a class="social-icon-label social-post-card__comments" [routerLink]="['/social/posts', post.id]" [queryParams]="{ compose: 1 }" fragment="post-comments" [attr.aria-label]="'查看 ' + post.title + ' 的留言'">
             <svg lucideMessageCircle aria-hidden="true" focusable="false"></svg>
             {{ post.commentCount || 0 }} 則留言
           </a>
@@ -368,7 +368,7 @@
           </div>
         </div>
         <textarea id="social-post-content" name="content" class="textarea textarea-bordered w-full social-post-form__textarea" placeholder="分享些內容…" [(ngModel)]="newPost.content"></textarea>
-        <span class="social-post-form__hint">先選取文字再按格式；沒選取時會插入成對標記，游標停在中間，在裡面輸入即可。再按一次可取消。字數 {{ newPost.content.length }}。</span>
+        <span class="social-post-form__hint">選取文字後按格式鈕套用，再按一次取消　·　{{ newPost.content.length }} 字</span>
       </div>
       @if (postPreview) {
         <div class="social-post-form__preview">
