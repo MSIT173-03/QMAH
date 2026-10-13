@@ -192,3 +192,14 @@
     transition: none;
   }
 }
+
+.hero-arrow {
+  position: absolute; top: 50%; z-index: 2; display: grid; place-items: center; width: 40px; height: 40px; min-height: 40px; padding: 0; transform: translateY(-50%);
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent); border-radius: 50%; background: color-mix(in srgb, var(--color-surface, #fff) 90%, transparent); color: inherit; cursor: pointer;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 16%); transition: background 160ms;
+}
+.hero-arrow:hover { background: var(--color-surface, #fff); }
+.hero-arrow:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.hero-arrow--prev { left: 12px; }
+.hero-arrow--next { right: 12px; }
+@media (max-width: 640px) { .hero-arrow { top: auto; bottom: 10px; transform: none; } .hero-arrow--next { left: 60px; right: auto; } }

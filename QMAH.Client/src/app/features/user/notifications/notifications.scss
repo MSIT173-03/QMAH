@@ -20,7 +20,7 @@
 // ===============================
 
 .notifications-page {
-  max-width: 1160px;
+  max-width: 1180px;
 
   margin: 0 auto;
 
@@ -480,20 +480,40 @@
 }
 
 
+// 未讀指示：鈴鐺圖示右上角的小圓點，加上卡片左緣的一條細色條；文字「未讀」徽章保留給讀屏與色盲使用者。
 .unread-dot {
   position: absolute;
 
-  top: 17px;
-  left: -4px;
+  top: -3px;
+  right: -3px;
 
-  width: 8px;
-  height: 8px;
+  width: 11px;
+  height: 11px;
 
+  border: 2px solid var(--qmah-surface-elevated);
   border-radius: 50%;
 
-  background: var(--qmah-primary);
+  background: #c5493f;
+}
 
-  box-shadow: var(--qmah-shadow-card);
+.notification-icon {
+  position: relative;
+}
+
+.notification-card.unread::before {
+  position: absolute;
+
+  top: 14px;
+  bottom: 14px;
+  left: 0;
+
+  width: 3px;
+
+  border-radius: 0 3px 3px 0;
+
+  background: #c5493f;
+
+  content: '';
 }
 
 
@@ -1199,3 +1219,9 @@
 .unread-dot { background: #c5493f; }
 :host-context([data-theme='qmahdark']) .unread-dot { background: #e2675d; }
 :host-context([data-theme='qmahdark']) .status-badge.unread-badge { color: #f0b0aa; }
+
+.category-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+.category-tabs button { padding: 6px 16px; border: 1px solid var(--qmah-border); border-radius: 999px; background: transparent; color: inherit; font: inherit; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: border-color 140ms, background 140ms; }
+.category-tabs button:hover { border-color: var(--qmah-primary); }
+.category-tabs button.active { border-color: var(--qmah-primary); background: var(--qmah-primary); color: var(--qmah-primary-content, #fff); }
+.category-tabs button:focus-visible { outline: 2px solid var(--qmah-primary); outline-offset: 2px; }

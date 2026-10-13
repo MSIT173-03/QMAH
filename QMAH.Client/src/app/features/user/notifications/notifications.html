@@ -184,6 +184,12 @@
       </div>
 
 
+      <div class="category-tabs" role="tablist" aria-label="通知類型">
+        @for (c of categories; track c.key) {
+          <button type="button" role="tab" [attr.aria-selected]="selectedCategory === c.key" [class.active]="selectedCategory === c.key" (click)="selectCategory(c.key)">{{ c.label }}</button>
+        }
+      </div>
+
       <!-- =============================== -->
       <!-- Filter Empty -->
       <!-- =============================== -->
@@ -230,15 +236,6 @@
               [class.reading]="readingId === notification.id"
             >
 
-              <!-- 未讀圓點 -->
-
-              @if (!notification.isRead) {
-
-                <span class="unread-dot" aria-hidden="true"></span>
-
-              }
-
-
               <!-- Icon -->
 
               <div
@@ -247,6 +244,10 @@
               >
 
                 <app-qmah-icon [name]="getNotificationIcon(notification)" />
+
+                @if (!notification.isRead) {
+                  <span class="unread-dot" aria-hidden="true"></span>
+                }
 
               </div>
 

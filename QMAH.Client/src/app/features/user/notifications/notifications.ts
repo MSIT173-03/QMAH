@@ -96,6 +96,7 @@ export class Notifications implements OnInit {
     this.errorMessage = '';
     this.actionError = '';
     this.selectedFilter = 'ALL';
+    this.selectedCategory = '';
     this.cdr.markForCheck();
     if (id) this.loadNotifications();
   });
@@ -119,6 +120,22 @@ export class Notifications implements OnInit {
   actionError = '';
 
   selectedFilter: NotificationFilter = 'ALL';
+
+  /** 通知類別：依通知導向的頁面分成社群互動、活動與系統，通知很多時先縮小範圍再翻頁。 */
+  selectedCategory: '' | 'SOCIAL' | 'EVENT' | 'SYSTEM' = '';
+  readonly categories = [
+    { key: '', label: '全部類型' }, { key: 'SOCIAL', label: '貼文與留言' }, { key: 'EVENT', label: '活動' }, { key: 'SYSTEM', label: '系統與其他' },
+  ] as const;
+
+  selectCategory(key: '' | 'SOCIAL' | 'EVENT' | 'SYSTEM'): void {
+    if (this.selectedCategory === key) return;
+    this.selectedCategory = key;
+    this.page = 1;
+    this.request?.unsubscribe();
+    this.loading = false;
+    this.pendingRefresh = false;
+    this.loadNotifications();
+  }
 
 
   constructor(
@@ -252,7 +269,8 @@ export class Notifications implements OnInit {
           params: {
             page: this.page,
             pageSize: this.pageSize,
-            ...(this.selectedFilter === 'ALL' ? {} : { isRead: this.selectedFilter === 'READ' })
+            ...(this.selectedFilter === 'ALL' ? {} : { isRead: this.selectedFilter === 'READ' }),
+            ...(this.selectedCategory ? { category: this.selectedCategory } : {})
           }
         }
       )

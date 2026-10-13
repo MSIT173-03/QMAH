@@ -93,6 +93,11 @@ export class HeroCarousel {
     this.activeSlide.set(index);
   }
 
+  /** 上一張／下一張（循環） */
+  protected step(delta: number): void {
+    this.activeSlide.update((v) => (v + delta + this.slides.length) % this.slides.length);
+  }
+
   protected toggleAutoplay(): void {
     this.autoplayEnabled.update((enabled) => !enabled);
   }
