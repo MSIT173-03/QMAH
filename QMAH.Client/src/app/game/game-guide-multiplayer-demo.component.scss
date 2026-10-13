@@ -103,7 +103,8 @@
   .exhibit { flex-direction: row; align-items: center; padding: 12px; gap: 12px; }
   .exhibit-frame { flex: 0 0 42%; width: auto; min-height: 150px; }
   .exhibit-plaque { flex: 1 1 0; padding: 8px 10px; }
-  .exhibit-plaque strong { font-size: 17px; }
+  .exhibit-plaque small { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+  .exhibit-plaque strong { min-width: 0; font-size: 17px; overflow-wrap: anywhere; }
   .exhibit-plaque span { display: none; }
   .guide-round-table { gap: 12px; }
   .guide-preview-write textarea { min-height: 110px; }
