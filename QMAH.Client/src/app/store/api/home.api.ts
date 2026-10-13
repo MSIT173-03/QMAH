@@ -1,13 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, of } from 'rxjs';
 import { CatalogApi } from './catalog.api';
-import {
-  Page,
-  PageQuery,
-  Product,
-  RankingQuery,
-  RecommendedProduct,
-} from './api.models';
+import { Product, RankingQuery, RecommendedProduct } from './api.models';
 
 /** 首頁與行銷內容 API */
 @Injectable({ providedIn: 'root' })
@@ -22,14 +16,14 @@ export class HomeApi {
     );
   }
 
-  /** 為你推薦：沿用商品清單 API 依最新上架排序（後端沒有專用的推薦 API）；失敗時視為沒有推薦。 */
-  getRecommendations(query: PageQuery = {}): Observable<Page<RecommendedProduct>> {
-    return this.catalogApi.getProducts({ order: 3, page: query.page, pageSize: query.pageSize }).pipe(
-      map((page) => ({
-        ...page,
-        items: page.items.map((product) => ({ ...product, reason: '近期上架' })),
-      })),
-      catchError(() => of({ items: [], total: 0, page: query.page ?? 1, pageSize: query.pageSize ?? 20 })),
+  /**
+   * 為你推薦：後端依會員買過的器類比例隨機挑選商品（沒有購買紀錄時為隨機商品），
+   * 角標顯示商品的器類；失敗時視為沒有推薦。
+   */
+  getRecommendations(limit: number): Observable<RecommendedProduct[]> {
+    return this.catalogApi.getRecommended(limit).pipe(
+      map((items) => items.map((product) => ({ ...product, reason: product.category }))),
+      catchError(() => of<RecommendedProduct[]>([])),
     );
   }
 }

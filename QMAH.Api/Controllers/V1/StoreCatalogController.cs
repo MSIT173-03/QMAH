@@ -341,7 +341,102 @@ public sealed class StoreCatalogController(
         if (productIds.Count == 0)
             return Ok(Array.Empty<ProductListItemDto>());
 
-        // 欄位與 GetProducts 的清單項目相同（有效售價、評價摘要、已完成訂單的販售數量）。
+        // 依合計購買數量的順序回傳。
+        return Ok(await LoadListItemsAsync(productIds, cancellationToken));
+    }
+
+    /// <summary>
+    /// 為你推薦：依目前會員買過的商品在各文物種類（CategoryCode）的數量比例分配 limit 個名額，
+    /// 每個種類隨機挑出對應件數的上架商品；種類內商品不足時，不足的名額以其他隨機商品補滿。
+    /// 未登入或沒有購買紀錄時整份都是隨機商品。「買過」與 GetPurchasedProductIds 相同：
+    /// 訂單狀態不是待付款（PENDING_PAYMENT）或已取消（CANCELLED）。
+    /// </summary>
+    [HttpGet("products/recommended")]
+    public async Task<ActionResult<IReadOnlyList<ProductListItemDto>>> GetRecommendedProducts(
+        int limit = 20,
+        CancellationToken cancellationToken = default)
+    {
+        limit = Math.Clamp(limit, 1, 50);
+
+        var purchased = new List<(string CategoryCode, int Quantity)>();
+        if (TryGetCurrentUserId(out var userId))
+        {
+            var rows = await db.OrderDetails
+                .AsNoTracking()
+                .Where(detail => detail.Order.UserId == userId
+                    && detail.Order.Status != "PENDING_PAYMENT"
+                    && detail.Order.Status != "CANCELLED")
+                .GroupBy(detail => detail.Product.CategoryCode)
+                .Select(group => new { CategoryCode = group.Key, Quantity = group.Sum(detail => detail.Quantity) })
+                .ToListAsync(cancellationToken);
+            purchased = rows.Select(row => (row.CategoryCode, row.Quantity)).ToList();
+        }
+
+        var productIds = new List<Guid>();
+        foreach (var (categoryCode, count) in AllocateByProportion(purchased, limit))
+        {
+            productIds.AddRange(await db.Products
+                .AsNoTracking()
+                .Where(product => product.IsActive && product.CategoryCode == categoryCode)
+                .OrderBy(product => Guid.NewGuid())
+                .Select(product => product.Id)
+                .Take(count)
+                .ToListAsync(cancellationToken));
+        }
+
+        // 沒有購買紀錄，或某些種類的上架商品不夠分配的名額：以其他隨機商品補滿。
+        if (productIds.Count < limit)
+        {
+            productIds.AddRange(await db.Products
+                .AsNoTracking()
+                .Where(product => product.IsActive && !productIds.Contains(product.Id))
+                .OrderBy(product => Guid.NewGuid())
+                .Select(product => product.Id)
+                .Take(limit - productIds.Count)
+                .ToListAsync(cancellationToken));
+        }
+
+        // 打散順序，避免同一種類的商品連在一起。
+        var shuffled = productIds.ToArray();
+        Random.Shared.Shuffle(shuffled);
+        return Ok(await LoadListItemsAsync(shuffled, cancellationToken));
+    }
+
+    /// <summary>
+    /// 依購買數量比例把 limit 個名額分給各種類（最大餘數法）：先各取比例的整數部分，
+    /// 剩下的名額依餘數由大到小各補一個，總和剛好是 limit。沒有購買紀錄時不分配。
+    /// </summary>
+    private static List<(string CategoryCode, int Count)> AllocateByProportion(
+        List<(string CategoryCode, int Quantity)> purchased,
+        int limit)
+    {
+        var total = purchased.Sum(item => (long)item.Quantity);
+        if (total <= 0)
+            return [];
+
+        var shares = purchased
+            .Select(item => (
+                item.CategoryCode,
+                Count: (int)(item.Quantity * (long)limit / total),
+                Remainder: item.Quantity * (long)limit % total))
+            .ToList();
+        var leftover = limit - shares.Sum(share => share.Count);
+        return shares
+            .OrderByDescending(share => share.Remainder)
+            .ThenBy(share => share.CategoryCode)
+            .Select((share, index) => (share.CategoryCode, Count: share.Count + (index < leftover ? 1 : 0)))
+            .Where(share => share.Count > 0)
+            .ToList();
+    }
+
+    /// <summary>
+    /// 依指定順序取回商品清單項目，欄位與 GetProducts 相同（有效售價、評價摘要、已完成訂單的販售數量），
+    /// 並統一轉換公開圖片網址；已下架或不存在的編號會略過。
+    /// </summary>
+    private async Task<List<ProductListItemDto>> LoadListItemsAsync(
+        IReadOnlyList<Guid> productIds,
+        CancellationToken cancellationToken)
+    {
         var products = await db.Products
             .AsNoTracking()
             .Where(product => productIds.Contains(product.Id))
@@ -378,11 +473,10 @@ public sealed class StoreCatalogController(
                     .Sum(o => o.Quantity)))
             .ToListAsync(cancellationToken);
 
-        // 依合計購買數量的順序回傳，並統一轉換公開圖片網址。
-        return Ok(productIds
+        return productIds
             .Select(productId => products.FirstOrDefault(product => product.Id == productId))
             .OfType<ProductListItemDto>()
             .Select(product => product with { PrimaryImagePath = mediaUrlResolver.Resolve(product.PrimaryImagePath) })
-            .ToList());
+            .ToList();
     }
 }

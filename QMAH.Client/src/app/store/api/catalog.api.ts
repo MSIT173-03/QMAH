@@ -108,6 +108,16 @@ export class CatalogApi {
   }
 
   /**
+   * GET /store/products/recommended：為你推薦。後端依目前會員買過的商品在各器類的數量比例，
+   * 隨機挑出對應器類的商品；未登入或沒有購買紀錄時回傳隨機商品。每次查詢結果不同。
+   */
+  getRecommended(limit: number): Observable<Product[]> {
+    return this.http
+      .get<ApiProductListItem[]>(apiUrl('/products/recommended'), { params: toParams({ limit }) })
+      .pipe(map((items) => items.map(toProduct)));
+  }
+
+  /**
    * GET /store/products/{id}/reviews：取回商品的全部評論。後端只支援分頁，不支援依星等篩選也不提供各星等則數，
    * 因此逐頁取回全部評論，篩選與統計交由 toReviewPage 在前端計算。
    */

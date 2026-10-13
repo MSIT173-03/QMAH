@@ -69,10 +69,10 @@ export class Home {
   /** 請求「為你推薦」的商品資料（一次取 HOME_PRODUCT_COUNT 件，實際顯示幾件由版位的欄數與固定行數決定）。 */
   private loadRecommendations(): void {
     this.homeApi
-      .getRecommendations({ page: 1, pageSize: HOME_PRODUCT_COUNT })
-      .subscribe((page) =>
+      .getRecommendations(HOME_PRODUCT_COUNT)
+      .subscribe((items) =>
         this.recommendedItems.set(
-          page.items.map(
+          items.map(
             (item): BadgedProductView => ({ ...toProductView(item), badge: item.reason, badgeVariant: 'teal' }),
           ),
         ),
