@@ -31,7 +31,7 @@ describe('PostsComponent', () => {
   afterEach(() => {
     // 公告主視覺補撈最新貼文的請求（精選公告不足時才送出）：不論測試有沒有走到 initializePosts 都清掉
     for (let round = 0; round < 3; round++) {
-      httpMock.match((r) => r.url.endsWith('/social/posts') && r.params.has('postType'))
+      httpMock.match((r) => r.url.endsWith('/social/posts') && r.params.get('pageSize') === '12')
         .forEach((req) => req.flush({ items: [], page: 1, pageSize: 12, totalCount: 0, totalPages: 0 }));
     }
     httpMock.verify();
@@ -42,7 +42,7 @@ describe('PostsComponent', () => {
     // 公告主視覺在精選公告不足時會再補一次最新貼文（第一批回應後才送出），所以清兩輪
     for (let round = 0; round < 2; round++) {
       httpMock.match(r => r.url.endsWith('/social/posts')).forEach(req => req.flush({
-        items: req.request.params.has('postType') ? [] : items,
+        items: req.request.params.get('pageSize') === '12' ? [] : items,
         page: 1, pageSize: 20, totalCount: 100, totalPages: 5,
       }));
     }
@@ -214,7 +214,7 @@ describe('PostsComponent', () => {
 
     const postRequests = httpMock.match((r) => r.url.endsWith('/social/posts'));
     expect(postRequests.length).toBe(2);
-    const postsRequest = postRequests.find((r) => !r.request.params.has('postType'));
+    const postsRequest = postRequests.find((r) => r.request.params.get('pageSize') === '20');
     const announcementsRequest = postRequests.find((r) => r.request.params.get('postType') === 'ANNOUNCEMENT');
     expect(postsRequest).toBeDefined();
     expect(announcementsRequest).toBeDefined();
@@ -267,7 +267,7 @@ describe('PostsComponent', () => {
     socialChanges.next();
 
     httpMock.expectOne(r => r.url.endsWith('/social/posts/visible')).flush([]);
-    httpMock.expectOne(r => r.url.endsWith('/social/posts') && !r.params.has('postType')).flush({
+    httpMock.expectOne(r => r.url.endsWith('/social/posts') && r.params.get('postType') === 'POST').flush({
       items: [], page: 1, pageSize: 20, totalCount: 0, totalPages: 0
     });
     httpMock.expectOne(r => r.url.endsWith('/social/events')).flush({ items: [], page: 1, pageSize: 2, totalCount: 0, totalPages: 0 });
@@ -282,5 +282,23 @@ describe('PostsComponent', () => {
     socialChanges.next();
 
     httpMock.expectNone(r => r.url.endsWith('/social/posts/visible'));
+  });
+
+  it('loads ordinary posts by default and recovers a failed board request on page one', () => {
+    initializePosts([{ id: 'post-1', createdAt: '2026-10-08T00:00:00Z' } as SocialPostListItem]);
+    component.selectBoard('GUIDE');
+    httpMock.expectOne(r => r.params.get('boardCode') === 'GUIDE').flush({}, { status: 500, statusText: 'Server Error' });
+    expect(component.loadError).toBeTruthy();
+    component.liveUpdateNotice = '更新延遲，稍後重試';
+    component.retryPosts();
+    const retry = httpMock.expectOne(r => r.params.get('boardCode') === 'GUIDE');
+    expect(retry.request.params.get('page')).toBe('1');
+    retry.flush({ items: [], page: 1, pageSize: 20, totalCount: 0, totalPages: 0 });
+    expect(component.loadError).toBeNull();
+    expect(component.liveUpdateNotice).toBe('');
+    component.selectBoard('');
+    const all = httpMock.expectOne(r => r.url.endsWith('/social/posts'));
+    expect(all.request.params.get('postType')).toBe('POST');
+    all.flush({ items: [], page: 1, pageSize: 20, totalCount: 0, totalPages: 0 });
   });
 });

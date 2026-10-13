@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { EMPTY, Observable, catchError, concat, forkJoin, map, of, switchMap, tap } from 'rxjs';
+import { EMPTY, Observable, catchError, concat, finalize, forkJoin, map, of, shareReplay, switchMap, tap } from 'rxjs';
 import { apiUrl, toParams } from './http';
 import {
   Category,
@@ -41,6 +41,7 @@ export class CatalogApi {
   private readonly http = inject(HttpClient);
   /** 公開型錄資料的記憶體快取（只放與會員無關的資料；換頁、切分類時先秒顯示快取，再背景更新） */
   private readonly cache = new Map<string, { at: number; value: unknown }>();
+  private readonly inFlight = new Map<string, Observable<unknown>>();
 
   /**
    * stale-while-revalidate：新鮮快取直接回傳；過期但仍可用的快取先回傳再背景更新（會依序送出兩次值）；沒有快取才等網路。
@@ -50,12 +51,16 @@ export class CatalogApi {
     const hit = bypass ? undefined : this.cache.get(key);
     const age = hit ? Date.now() - hit.at : Infinity;
     if (hit && age < FRESH_MS) return of(structuredClone(hit.value as T));
-    const fetch$ = load().pipe(
+    const running = this.inFlight.get(key) as Observable<T> | undefined;
+    const fetch$ = running ?? load().pipe(
       tap((value) => {
         if (this.cache.size >= CACHE_MAX) this.cache.delete(this.cache.keys().next().value!);
         this.cache.set(key, { at: Date.now(), value: structuredClone(value) });
       }),
+      finalize(() => { if (this.inFlight.get(key) === fetch$) this.inFlight.delete(key); }),
+      shareReplay({ bufferSize: 1, refCount: true }),
     );
+    if (!running) this.inFlight.set(key, fetch$);
     if (hit && age < STALE_MS) return concat(of(structuredClone(hit.value as T)), fetch$.pipe(catchError(() => EMPTY)));
     return fetch$;
   }
@@ -81,7 +86,7 @@ export class CatalogApi {
   /** GET /store/promotions：商城與社群共用的官方優惠活動公告，顯示於頂部公告列。 */
   getPromotions(): Observable<StorePromotion[]> {
     // 優惠活動只是商城輔助內容；公告暫時不可用時仍保留商品瀏覽與結帳入口。
-    return this.http.get<StorePromotion[]>(apiUrl('/promotions')).pipe(catchError(() => of([])));
+    return this.swr('promotions', () => this.http.get<StorePromotion[]>(apiUrl('/promotions'))).pipe(catchError(() => of([])));
   }
 
   /**

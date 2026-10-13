@@ -64,12 +64,17 @@ export class NotificationLive {
           void start();
         }
       };
+      const visible = () => {
+        if (this.document.visibilityState !== 'hidden') online();
+      };
       this.document.defaultView?.addEventListener('online', online);
+      this.document.addEventListener('visibilitychange', visible);
       void start();
       return () => {
         closed = true;
         clearInterval(fallback);
         this.document.defaultView?.removeEventListener('online', online);
+        this.document.removeEventListener('visibilitychange', visible);
         if (retry) clearTimeout(retry);
         void hub?.stop().catch(() => undefined);
       };

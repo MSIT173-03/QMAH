@@ -2,6 +2,15 @@
    放在元件 stylesheet 而非全域 social-shared.scss，避免撐大 initial bundle（預算 500 kB）；各頁以 styleUrl 陣列引入。 */
 /* ui-integration: 貼文詳情／活動／公告原本直接套 daisyUI 預設 card（shadow-xl、badge-secondary、text-2xl），
    與貼文牆的語法脫節；這裡集中成 Social 共用的頁首、篩選列、panel、tag、留言列，四頁回到同一組 token。 */
+.qmah-social-page .btn-primary {
+  background: var(--qmah-social-action);
+  border-color: var(--qmah-social-action);
+  color: #fff;
+}
+:host-context([data-theme='qmahdark']) .qmah-social-page .btn-primary {
+  color: var(--qmah-surface);
+}
+
 .qmah-social-page .social-page-head {
   display: flex;
   align-items: center;

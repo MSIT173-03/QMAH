@@ -63,6 +63,18 @@ describe('NotificationLive', () => {
     expect(state.hubs[1].stop).toHaveBeenCalledTimes(1);
     subscription.unsubscribe();
   });
+  it('refreshes after returning to the tab and removes the listener on logout', async () => {
+    const listener = vi.fn();
+    const subscription = TestBed.inject(NotificationLive).changes.subscribe(listener);
+    me.set({ id: 'member' }); await settle();
+    const initial = listener.mock.calls.length;
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(listener).toHaveBeenCalledTimes(initial + 1);
+    me.set(null); await settle();
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(listener).toHaveBeenCalledTimes(initial + 1);
+    subscription.unsubscribe();
+  });
   it('retries a failed initialization and refreshes by HTTP while waiting', async () => {
     vi.useFakeTimers();
     let subscription: { unsubscribe(): void } | undefined;

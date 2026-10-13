@@ -1,0 +1,76 @@
+name: Apply Azure demo database updates
+
+# 資料庫更新需要明確手動啟動：先備份並驗證，再依序執行可重複執行的升級與種子腳本。
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qmah-azure-demo
+  cancel-in-progress: false
+
+jobs:
+  database:
+    if: github.ref == 'refs/heads/deploy/azure-demo'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      SQL_FILES: >-
+        upgrades/1.0.8-social-bookmarks-messages.sql
+        upgrades/1.0.9-ai-review-status.sql
+        upgrades/1.0.10-ai-review-toggle.sql
+        seeds/store-sale-prices.sql
+        seeds/store-gift-season-coupon.sql
+        seeds/store-point-exchange-coupons.sql
+        seeds/store-admin-event-coupons.sql
+        seeds/store-sold-topup.sql
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Package scripts
+        run: |
+          mkdir -p dbpack
+          cp deploy/azure-demo/apply-database-updates.sh dbpack/
+          for f in $SQL_FILES; do mkdir -p "dbpack/$(dirname "$f")"; cp "database/$f" "dbpack/$f"; done
+          tar -czf qmah-db.tar.gz -C dbpack .
+      - name: Azure login with branch-restricted OIDC
+        env:
+          CLIENT_ID: ${{ vars.QMAH_AZURE_CLIENT_ID }}
+          TENANT_ID: ${{ vars.QMAH_AZURE_TENANT_ID }}
+          SUBSCRIPTION_ID: ${{ vars.QMAH_AZURE_SUBSCRIPTION_ID }}
+        run: |
+          token=$(curl -fsS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=api%3A%2F%2FAzureADTokenExchange" | jq -r '.value')
+          echo "::add-mask::$token"
+          az login --service-principal --username "$CLIENT_ID" --tenant "$TENANT_ID" --federated-token "$token" --output none
+          az account set --subscription "$SUBSCRIPTION_ID"
+      - name: Backup, apply and verify
+        env:
+          REVISION: ${{ github.sha }}
+        run: |
+          blob="updates/db-$REVISION.tar.gz"
+          az storage blob upload --account-name qmahdemo1011hsuan --container-name deployment --name "$blob" --file qmah-db.tar.gz --overwrite --auth-mode login --output none
+          expiry=$(date -u -d '+30 minutes' '+%Y-%m-%dT%H:%MZ')
+          sas=$(az storage blob generate-sas --account-name qmahdemo1011hsuan --container-name deployment --name "$blob" --permissions r --expiry "$expiry" --as-user --auth-mode login --output tsv)
+          echo "::add-mask::$sas"
+          url="https://qmahdemo1011hsuan.blob.core.windows.net/deployment/$blob?$sas"
+          echo "::add-mask::$url"
+          cat > run-db.sh <<EOF2
+          bash <<'QMAH_DB'
+          set -euo pipefail
+          rm -rf /tmp/qmah-db && mkdir -p /tmp/qmah-db
+          curl -fsS --retry 3 '$url' -o /tmp/qmah-db.tar.gz
+          tar -xzf /tmp/qmah-db.tar.gz -C /tmp/qmah-db
+          bash /tmp/qmah-db/apply-database-updates.sh /tmp/qmah-db $SQL_FILES
+          rm -rf /tmp/qmah-db /tmp/qmah-db.tar.gz
+          QMAH_DB
+          EOF2
+          az vm run-command invoke --resource-group qmah-demo-rg --name qmah-demo-vm --command-id RunShellScript --scripts @run-db.sh --query 'value[].message' --output tsv > db-result.txt
+          cat db-result.txt
+          grep -q "QMAH_DB_OK" db-result.txt
+      - name: Result
+        if: always()
+        run: echo "Database update for revision ${{ github.sha }}; a verified pre-release backup is kept on the VM." >> "$GITHUB_STEP_SUMMARY"

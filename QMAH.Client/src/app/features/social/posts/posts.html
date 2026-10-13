@@ -1,4 +1,4 @@
-<div class="qmah-social-page" [attr.data-board]="filterBoardCode || null">
+<div class="qmah-social-page" [attr.data-board]="filterBoardCode || null" [attr.data-qmah-first-view-ready]="!loading && posts.length ? '' : null">
   <app-social-spotlight />
 
   <header class="social-page-head">
@@ -174,12 +174,17 @@
     }
   </div>
 
-  @if (liveUpdateNotice) {
+  @if (liveUpdateNotice && !loadError) {
     <p class="social-live-notice" role="status">{{ liveUpdateNotice }}</p>
   }
 
   @if (loadError) {
-    <div class="alert alert-error mb-4" role="alert">{{ loadError }}</div>
+    <div class="alert alert-error mb-4" role="alert">
+      <span>{{ loadError }}</span>
+      @if (loadError !== '請先登入後再查看收藏的貼文。') {
+        <button type="button" class="btn btn-sm" (click)="retryPosts()" [disabled]="loading">重新載入</button>
+      }
+    </div>
   }
 
   @if (bookmarkNotice) {

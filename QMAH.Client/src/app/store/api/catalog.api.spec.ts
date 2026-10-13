@@ -4,6 +4,23 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 
 import { CatalogApi } from './catalog.api';
 
+describe('CatalogApi shared requests', () => {
+  it('shares simultaneous promotion reads and uses the fresh response on return', () => {
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    const http = TestBed.inject(HttpTestingController);
+    const api = TestBed.inject(CatalogApi);
+    const received: unknown[] = [];
+    api.getPromotions().subscribe(value => received.push(value));
+    api.getPromotions().subscribe(value => received.push(value));
+    const requests = http.match(r => r.url.endsWith('/store/promotions'));
+    expect(requests).toHaveLength(1);
+    requests[0].flush([]);
+    api.getPromotions().subscribe(value => received.push(value));
+    expect(received).toHaveLength(3);
+    http.verify();
+  });
+});
+
 const listItem = (id: string, name: string) => ({
   id,
   artifactId: null,

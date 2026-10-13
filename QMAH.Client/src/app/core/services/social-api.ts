@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { EMPTY, Observable, catchError, concat, of, tap } from 'rxjs';
+import { EMPTY, Observable, catchError, concat, finalize, of, shareReplay, tap } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { MeApiService } from './me-api';
@@ -268,18 +268,23 @@ export class SocialApiService {
 
   /** 讀取結果的記憶體快取：先把上次的結果秒顯示，網路永遠照常重抓並更新（資料不會因快取而過期）；以會員為單位分開，避免換帳號看到別人的內容 */
   private cache = new Map<string, { at: number; value: unknown }>();
+  private readonly inFlight = new Map<string, Observable<unknown>>();
   private static readonly CACHE_MAX = 120;
   private static readonly CACHE_TTL_MS = 10 * 60_000;
 
   private live<T>(key: string, load: () => Observable<T>): Observable<T> {
     const full = `${this.meApi.me()?.id ?? 'guest'}|${key}`;
     const hit = this.cache.get(full);
-    const fetch$ = load().pipe(
+    const running = this.inFlight.get(full) as Observable<T> | undefined;
+    const fetch$ = running ?? load().pipe(
       tap((value) => {
         if (this.cache.size >= SocialApiService.CACHE_MAX) this.cache.delete(this.cache.keys().next().value!);
         this.cache.set(full, { at: Date.now(), value: structuredClone(value) });
       }),
+      finalize(() => { if (this.inFlight.get(full) === fetch$) this.inFlight.delete(full); }),
+      shareReplay({ bufferSize: 1, refCount: true }),
     );
+    if (!running) this.inFlight.set(full, fetch$);
     if (hit && Date.now() - hit.at < SocialApiService.CACHE_TTL_MS) {
       return concat(of(structuredClone(hit.value as T)), fetch$.pipe(catchError(() => EMPTY)));
     }

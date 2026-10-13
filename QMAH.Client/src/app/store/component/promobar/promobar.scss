@@ -305,17 +305,20 @@
   gap: 8px;
   overflow: visible;
 
-  > :first-child {
-    padding: 2px 8px;
-    border-radius: 4px;
-    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
-    color: var(--color-accent);
-    font-weight: 700;
-  }
-
   > :nth-child(2),
   > :nth-child(n+6) { display: none; }
 }
+
+.promobar-label {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  color: var(--color-accent);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.promobar-label-sep { display: none; }
 
 @media (max-width: 1280px) {
   :host(.is-inline) .promobar-notes { display: none; }

@@ -127,6 +127,7 @@ export class PostsComponent implements OnInit, OnDestroy {
   liveUpdateNotice = '';
   loading = false;
   loadError: string | null = null;
+  private retryNextPage = false;
   createError: string | null = null;
   creating = false;
   reportSuccessMessage: string | null = null;
@@ -647,6 +648,7 @@ export class PostsComponent implements OnInit, OnDestroy {
 
   // GET /api/v1/social/posts（AllowAnonymous，回傳 ApiPage<SocialPostListItemDto>）
   loadPosts(allowCached = false): void {
+    this.retryNextPage = false;
     this.postsRequest?.unsubscribe();
     const order = this.sortOrder;
     const filterKey = JSON.stringify([this.filterBoardCode, this.filterKeyword, this.filterFrom, this.filterTo]);
@@ -662,6 +664,8 @@ export class PostsComponent implements OnInit, OnDestroy {
       this.totalPages = page.totalPages || Math.ceil(page.totalCount / (page.pageSize || 20));
       this.loading = false;
       this.lastLoadedAt = Date.now();
+      this.loadError = null;
+      this.liveUpdateNotice = '';
       this.cdr.detectChanges();
       if (this.postSentinel) { this.postObserver?.unobserve(this.postSentinel); this.postObserver?.observe(this.postSentinel); }
       this.flushPendingLiveRefresh();
@@ -679,9 +683,15 @@ export class PostsComponent implements OnInit, OnDestroy {
         console.error('取得貼文失敗:', err);
         this.loadError = err.status === 401 && this.bookmarksOnly ? '請先登入後再查看收藏的貼文。' : '取得貼文失敗，請稍後再試。';
         this.loading = false;
+        this.liveUpdateNotice = '';
         this.cdr.detectChanges();
       }
     });
+  }
+
+  retryPosts(): void {
+    if (this.retryNextPage) this.loadMorePosts();
+    else this.loadPosts();
   }
 
   /** 導覽的「我的收藏」不是真的看板，而是 bookmarked 篩選。 */
@@ -692,6 +702,7 @@ export class PostsComponent implements OnInit, OnDestroy {
   private postQuery(page: number, sort = this.sortOrder) {
     return {
       page, pageSize: 20,
+      postType: this.filterBoardCode ? undefined : 'POST' as const,
       boardCode: this.bookmarksOnly ? undefined : this.filterBoardCode || undefined,
       bookmarked: this.bookmarksOnly ? true : undefined,
       q: this.filterKeyword || undefined,
@@ -721,6 +732,7 @@ export class PostsComponent implements OnInit, OnDestroy {
       error: () => {
         this.loading = false;
         this.loadError = '後面的貼文暫時無法載入，請按「載入更多」再試一次。';
+        this.retryNextPage = true;
         this.cdr.detectChanges();
         this.flushPendingLiveRefresh();
       },
