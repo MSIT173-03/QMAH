@@ -106,7 +106,7 @@
     transform:scaleX(-1);
   }
   .book-stage--mobile-single .page--mobile-hidden { display:none; }
-  .book-stage--mobile-single .book__content { display:block;padding-right:calc(var(--pad-x) + 26px); }
+  .book-stage--mobile-single .book__content { display:block;padding-top:36px;padding-right:calc(var(--pad-x) + 26px); }
   .book-stage--mobile-single .page--left { position:relative;display:grid;grid-template-rows:auto minmax(360px,64svh) 52px;row-gap:12px; }
   .book-stage--mobile-single .page--left .page__head { display:grid;gap:10px;padding-bottom:10px;border-bottom:3px double var(--ink-line); }
   .book-stage--mobile-single .mobile-book-toolbar {
@@ -143,35 +143,61 @@
   .book-stage--mobile-single .mobile-page-controls .seal-btn { min-width:0;width:100%;padding-inline:6px;gap:4px;font-size:clamp(10px,3.2vw,12px);letter-spacing:0; }
   .book-stage--mobile-single .mobile-page-controls .seal-btn strong { font-size:inherit; }
   .book-stage--mobile-single .mobile-page-controls .seal-btn app-qmah-icon { flex:none;width:14px;height:14px; }
-  .book-stage--mobile-single .mobile-catalog-tabs {
+  /* 真正掛在書本上緣的索引書籤；五枚在 320px 手機仍保留 44px 觸控寬度。 */
+  .book-stage--mobile-single .mobile-bookmarks {
+    position:absolute;
+    z-index:7;
+    top:-30px;
+    left:24px;
+    right:16px;
+    max-width:360px;
     display:flex;
+    align-items:flex-start;
     gap:4px;
-    min-width:0;
-    width:100%;
-    overflow-x:auto;
-    scrollbar-width:thin;
+    opacity:0;
+    visibility:hidden;
+    --bookmark-active:#315d50;
   }
-  .book-stage--mobile-single .mobile-catalog-tab {
-    flex:1 0 auto;
+  .artifact-page[data-section='keys'] .mobile-bookmarks { --bookmark-active:#713b4c; }
+  .artifact-page[data-book='open'] .mobile-bookmarks { opacity:1;visibility:visible; }
+  .book-stage--mobile-single .mobile-bookmark {
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    flex:1 1 0;
     min-width:44px;
-    min-height:44px;
-    padding:6px 8px;
-    border:1px solid var(--ink-line);
-    border-bottom:3px solid transparent;
-    border-radius:4px 4px 0 0;
-    background:rgb(var(--paper-shade) / 5%);
-    color:var(--ink-soft);
-    font:600 13px/1.2 var(--qmah-font-serif);
+    max-width:68px;
+    height:48px;
+    padding:6px 4px 14px;
+    border:1px solid #ac8b53;
+    border-radius:3px 3px 0 0;
+    clip-path:polygon(0 0,100% 0,100% 100%,50% calc(100% - 8px),0 100%);
+    background:linear-gradient(90deg,#d7bb83,#ead8b0 18%,#dfc699 88%,#c7a774);
+    color:#563b23;
+    font:600 clamp(11px,3.3vw,13px)/1.2 var(--qmah-font-serif);
     white-space:nowrap;
+    box-shadow:inset 0 2px 1px rgb(255 255 255 / 35%);
     cursor:pointer;
+    touch-action:manipulation;
   }
-  .book-stage--mobile-single .mobile-catalog-tab.is-active {
-    border-bottom-color:var(--gold-deep);
-    background:rgb(var(--paper-shade) / 12%);
-    color:var(--ink);
+  .book-stage--mobile-single .mobile-bookmark::after {
+    content:'';
+    position:absolute;
+    inset:3px 4px 12px;
+    border-inline:1px dashed rgb(92 62 28 / 25%);
+    pointer-events:none;
   }
-  .book-stage--mobile-single .mobile-catalog-tab span { margin-left:4px;font-size:11px; }
-  .book-stage--mobile-single .mobile-catalog-tab:focus-visible { outline:3px solid var(--gold-deep);outline-offset:-3px; }
+  .book-stage--mobile-single .mobile-bookmark.is-active {
+    height:58px;
+    border-color:var(--bookmark-active);
+    background:var(--bookmark-active);
+    color:#fff4d8;
+  }
+  .book-stage--mobile-single .mobile-bookmark.is-active::after { border-inline-color:rgb(255 244 216 / 35%); }
+  .book-stage--mobile-single .mobile-bookmark span { font-size:10px; }
+  .book-stage--mobile-single .mobile-bookmark:focus-visible { outline:3px solid var(--gold-light);outline-offset:-4px; }
   .book-stage--mobile-single .mobile-key-tools {
     position:relative;
     z-index:6;
@@ -182,7 +208,6 @@
     padding-bottom:8px;
     border-bottom:1px solid var(--ink-line);
   }
-  .book-stage--mobile-single .mobile-key-tools .mobile-catalog-tabs { grid-row:1; }
   .book-stage--mobile-single .mobile-key-tools__count { color:var(--ink-soft);font-size:12px;white-space:nowrap; }
   .book-stage--mobile-single .mobile-key-tools__count strong { color:var(--ink);font-variant-numeric:tabular-nums; }
   .book-stage--mobile-single .page__body { min-height:300px;padding-inline:22px; }

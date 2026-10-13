@@ -18,6 +18,23 @@
   <div class="book-stage" [class.book-stage--mobile-single]="mobileBook()">
     <div class="book" [class.book--turning]="turning()">
 
+      @if (mobileBook()) {
+        <div class="mobile-bookmarks" role="group" [attr.aria-label]="bookSection() === 'catalog' ? '圖鑑篩選方式' : '鑰匙種類篩選'" [attr.inert]="bookState() === 'open' ? null : ''">
+          @if (bookSection() === 'catalog') {
+            @for (tab of catalogTabs; track tab.id) {
+              <button type="button" class="mobile-bookmark" [class.is-active]="catalogTab() === tab.id" [attr.aria-pressed]="catalogTab() === tab.id" (click)="setCatalogTab(tab.id)">
+                {{ tab.label }}
+                @if (tab.id !== 'ALL' && selectedFilterCount(tab.id); as count) { <span>{{ count }}</span> }
+              </button>
+            }
+          } @else {
+            @for (tab of keyTabs; track tab.id) {
+              <button type="button" class="mobile-bookmark" [class.is-active]="keyFilter() === tab.id" [attr.aria-pressed]="keyFilter() === tab.id" (click)="setKeyFilter(tab.id)">{{ tab.label }}</button>
+            }
+          }
+        </div>
+      }
+
       <!-- ========== 上方頁籤：圖鑑／鑰匙背包 ========== -->
       <div class="book__top-tabs" role="tablist" aria-label="書冊章節" [attr.aria-orientation]="mobileBook() ? 'vertical' : 'horizontal'" [attr.inert]="bookState() === 'open' ? null : ''">
         <button
@@ -155,14 +172,6 @@
                       </button>
                     </div>
                     @if (fullscreenError()) { <p class="mobile-book-toolbar__error" role="status">{{ fullscreenError() }}</p> }
-                  </div>
-                  <div class="mobile-catalog-tabs" role="group" aria-label="圖鑑篩選方式">
-                    @for (tab of catalogTabs; track tab.id) {
-                      <button type="button" class="mobile-catalog-tab" [class.is-active]="catalogTab() === tab.id" [attr.aria-pressed]="catalogTab() === tab.id" (click)="setCatalogTab(tab.id)">
-                        {{ tab.label }}
-                        @if (tab.id !== 'ALL' && selectedFilterCount(tab.id); as count) { <span>{{ count }}</span> }
-                      </button>
-                    }
                   </div>
                 }
                 <label class="quill-search">
@@ -308,11 +317,6 @@
               </div>
               <div class="mobile-key-tools">
                 <span class="mobile-key-tools__count">持有 <strong>{{ keyFilterCount('ALL') }}</strong> 把</span>
-                <div class="mobile-catalog-tabs" role="group" aria-label="鑰匙種類篩選">
-                  @for (tab of keyTabs; track tab.id) {
-                    <button type="button" class="mobile-catalog-tab" [class.is-active]="keyFilter() === tab.id" [attr.aria-pressed]="keyFilter() === tab.id" (click)="setKeyFilter(tab.id)">{{ tab.label }}</button>
-                  }
-                </div>
               </div>
             }
             <app-key-list
