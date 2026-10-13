@@ -36,8 +36,11 @@
     } @else if (isEmpty()) {
     <app-empty-state [title]="emptyTitle" [desc]="emptyDesc" />
     } @else {
+    @for (group of groups(); track group.key) {
+    <div class="coupon-group">
+      <h3 class="coupon-group-title">{{ group.title }}<span>{{ group.desc }}</span></h3>
     <ul class="coupon-grid">
-      @for (coupon of coupons(); track coupon.id) {
+      @for (coupon of group.items; track coupon.id) {
       @let actionLabel = coupon.unaffordable ? unaffordableLabel : costActionLabel;
       <!-- 會員點數不夠兌換的券：整張變灰、沒有懸停效果，右側按鈕停用 -->
       <li class="coupon-card" [class.coupon-card--unaffordable]="coupon.unaffordable">
@@ -51,6 +54,8 @@
       </li>
       }
     </ul>
+    </div>
+    }
     }
   </section>
 

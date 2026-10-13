@@ -111,6 +111,14 @@ export class CouponStore {
       metas: [coupon.cond, `兌換後 ${coupon.validityDays} 天內有效`, `${coupon.endDate} 前可兌換`],
     }));
   });
+  /** 兌換商店分兩區：現金折抵（固定金額）與折扣券（百分比），各自依兌換點數由低到高 */
+  protected readonly groups = computed(() => {
+    const sorted = [...this.coupons()].sort((a, b) => a.pointCost - b.pointCost);
+    return [
+      { key: 'cash', title: '現金折抵', desc: '結帳直接扣掉固定金額，單筆訂單滿額即可使用。', items: sorted.filter((c) => !c.off.includes('%')) },
+      { key: 'percent', title: '折扣券', desc: '依訂單金額打折，門檻較高，適合一次買齊的時候。', items: sorted.filter((c) => c.off.includes('%')) },
+    ].filter((g) => g.items.length > 0);
+  });
   protected readonly isEmpty = computed(() => !!this.result() && this.coupons().length === 0);
 
   /* ===============================

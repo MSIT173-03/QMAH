@@ -388,3 +388,7 @@ button.coupon-card-cost:hover .coupon-card-cost-label { background: #8f5f1c; }
     }
   }
 }
+
+.coupon-group + .coupon-group { margin-top: var(--qmah-space-6, 32px); }
+.coupon-group-title { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; margin: 0 0 var(--qmah-space-3, 12px); font-size: 1.0625rem; }
+.coupon-group-title span { color: var(--qmah-muted); font-size: 0.875rem; font-weight: 400; }

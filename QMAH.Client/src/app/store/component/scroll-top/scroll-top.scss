@@ -81,7 +81,7 @@
 /* 固定模式：不依賴容器，直接貼在視窗右下角；顏色沿用各領域主色 */
 .scroll-top--fixed {
   position: fixed;
-  right: max(16px, calc((100vw - 1320px) / 2 + 8px));
+  right: 16px;
   bottom: 24px;
 }
 

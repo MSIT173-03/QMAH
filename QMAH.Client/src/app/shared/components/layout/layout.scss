@@ -758,3 +758,10 @@ textarea:focus-visible {
 .app-account__avatar--image { background: var(--qmah-surface-muted, #e9e6e0); }
 /* Keep layout measurable so first-screen media can load behind the route gate. */
 .app-main--preparing { opacity: .65; filter: blur(2px); pointer-events: none; }
+
+/* 帳號選單與通知面板同一套外觀：寬度、圓角、底色、標題列 */
+.app-account-panel { width: min(340px, calc(100vw - 16px)); padding: 6px; border-radius: 12px; background: var(--qmah-surface-elevated, var(--qmah-surface)); }
+.app-account-panel__who { position: relative; }
+.app-account-panel .app-account-panel__points { margin-left: auto; min-height: 0; padding: 3px 10px; gap: 4px; border-radius: 999px; background: color-mix(in srgb, #b58a1b 14%, transparent); color: #8a6710; font-size: 0.8125rem; font-weight: 800; }
+:host-context([data-theme='qmahdark']) .app-account-panel .app-account-panel__points { color: #e6b94d; }
+.app-account-panel a, .app-account-panel button { min-height: 46px; }

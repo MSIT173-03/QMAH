@@ -58,8 +58,14 @@
                   <strong>{{ me.displayName || me.email }}</strong>
                   @if (me.displayName) { <small>{{ me.email }}</small> }
                 </span>
+                <a class="app-account-panel__points" routerLink="/member/economy" (click)="closeMenu()"><app-qmah-icon name="coins" size="14" aria-hidden="true" />{{ me.pointBalance | number }}</a>
               </div>
               <a routerLink="/member" class="is-member" (click)="closeMenu()"><span class="app-account-panel__icon"><app-qmah-icon name="user-round" size="18" aria-hidden="true" /></span>會員中心</a>
+              <a routerLink="/member/daily-activity" style="--i:#d9822b" (click)="closeMenu()"><span class="app-account-panel__icon"><app-qmah-icon name="gift" size="18" aria-hidden="true" /></span>每日登入</a>
+              <a routerLink="/member/achievements" style="--i:#b58a1b" (click)="closeMenu()"><span class="app-account-panel__icon"><app-qmah-icon name="trophy" size="18" aria-hidden="true" /></span>成就與稱號</a>
+              <a routerLink="/social/posts" [queryParams]="{ board: '@bookmarks' }" style="--i:#3f8f78" (click)="closeMenu()"><span class="app-account-panel__icon"><app-qmah-icon name="book-open" size="18" aria-hidden="true" /></span>我的收藏</a>
+              <a routerLink="/member/coupons" style="--i:#c5493f" (click)="closeMenu()"><span class="app-account-panel__icon"><app-qmah-icon name="ticket" size="18" aria-hidden="true" /></span>我的折價券</a>
+              <a routerLink="/store/orders" style="--i:#7a5ec9" (click)="closeMenu()"><span class="app-account-panel__icon"><app-qmah-icon name="receipt" size="18" aria-hidden="true" /></span>我的訂單</a>
               @if (isAdmin()) {
                 <a class="app-admin-entry app-mobile-admin-entry is-admin" [href]="adminEntryUrl" (click)="confirmAdminNavigation($event)"><span class="app-account-panel__icon"><app-qmah-icon name="shield-check" size="18" aria-hidden="true" /></span>管理後台</a>
               }

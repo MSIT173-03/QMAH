@@ -1,3 +1,4 @@
+import { DecimalPipe } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter, Subscription } from 'rxjs';
@@ -17,7 +18,7 @@ import { PageLoaderComponent } from '../page-loader/page-loader';
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [PageLoaderComponent, ScrollTop, RouterOutlet, RouterLink, RouterLinkActive, NotificationsBellComponent, SiteFooter, AreaNavigationComponent, QmahIconComponent],
+  imports: [DecimalPipe, PageLoaderComponent, ScrollTop, RouterOutlet, RouterLink, RouterLinkActive, NotificationsBellComponent, SiteFooter, AreaNavigationComponent, QmahIconComponent],
   templateUrl: './layout.html',
   styleUrl: './layout.scss'
 })
