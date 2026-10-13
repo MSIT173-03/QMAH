@@ -21,15 +21,15 @@
       @if (mobileBook()) {
         <div class="mobile-bookmarks" role="group" [attr.aria-label]="bookSection() === 'catalog' ? '圖鑑篩選方式' : '鑰匙種類篩選'" [attr.inert]="bookState() === 'open' ? null : ''">
           @if (bookSection() === 'catalog') {
-            @for (tab of catalogTabs; track tab.id) {
-              <button type="button" class="mobile-bookmark" [class.is-active]="catalogTab() === tab.id" [attr.aria-pressed]="catalogTab() === tab.id" (click)="setCatalogTab(tab.id)">
+            @for (tab of catalogTabs; track tab.id; let i = $index) {
+              <button type="button" class="ribbon mobile-bookmark" [attr.data-index]="i" [class.is-active]="catalogTab() === tab.id" [attr.aria-pressed]="catalogTab() === tab.id" (click)="setCatalogTab(tab.id)">
                 {{ tab.label }}
                 @if (tab.id !== 'ALL' && selectedFilterCount(tab.id); as count) { <span>{{ count }}</span> }
               </button>
             }
           } @else {
-            @for (tab of keyTabs; track tab.id) {
-              <button type="button" class="mobile-bookmark" [class.is-active]="keyFilter() === tab.id" [attr.aria-pressed]="keyFilter() === tab.id" (click)="setKeyFilter(tab.id)">{{ tab.label }}</button>
+            @for (tab of keyTabs; track tab.id; let i = $index) {
+              <button type="button" class="ribbon mobile-bookmark" [attr.data-index]="i" [class.is-active]="keyFilter() === tab.id" [attr.aria-pressed]="keyFilter() === tab.id" (click)="setKeyFilter(tab.id)">{{ tab.label }}</button>
             }
           }
         </div>

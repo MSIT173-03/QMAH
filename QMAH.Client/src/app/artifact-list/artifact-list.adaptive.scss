@@ -156,10 +156,9 @@
     gap:4px;
     opacity:0;
     visibility:hidden;
-    --bookmark-active:#315d50;
   }
-  .artifact-page[data-section='keys'] .mobile-bookmarks { --bookmark-active:#713b4c; }
   .artifact-page[data-book='open'] .mobile-bookmarks { opacity:1;visibility:visible; }
+  /* 外觀直接沿用桌面 .ribbon 與 data-index 配色；这里只調整手機幾何。 */
   .book-stage--mobile-single .mobile-bookmark {
     position:relative;
     display:flex;
@@ -171,31 +170,27 @@
     max-width:68px;
     height:48px;
     padding:6px 4px 14px;
-    border:1px solid #ac8b53;
-    border-radius:3px 3px 0 0;
-    clip-path:polygon(0 0,100% 0,100% 100%,50% calc(100% - 8px),0 100%);
-    background:linear-gradient(90deg,#d7bb83,#ead8b0 18%,#dfc699 88%,#c7a774);
-    color:#563b23;
-    font:600 clamp(11px,3.3vw,13px)/1.2 var(--qmah-font-serif);
+    border-radius:12px 12px 0 0;
+    font-size:clamp(11px,3.3vw,13px);
+    line-height:1.2;
+    letter-spacing:0;
     white-space:nowrap;
-    box-shadow:inset 0 2px 1px rgb(255 255 255 / 35%);
-    cursor:pointer;
+    transform:translateY(3px);
     touch-action:manipulation;
   }
+  .book-stage--mobile-single .mobile-bookmark:hover { transform:translateY(1px); }
+  .book-stage--mobile-single .mobile-bookmark.is-active { height:58px;transform:translateY(0); }
   .book-stage--mobile-single .mobile-bookmark::after {
     content:'';
     position:absolute;
-    inset:3px 4px 12px;
-    border-inline:1px dashed rgb(92 62 28 / 25%);
+    left:0;
+    right:0;
+    bottom:0;
+    height:18px;
+    border-radius:inherit;
+    background:linear-gradient(0deg,rgb(0 0 0 / 42%),transparent);
     pointer-events:none;
   }
-  .book-stage--mobile-single .mobile-bookmark.is-active {
-    height:58px;
-    border-color:var(--bookmark-active);
-    background:var(--bookmark-active);
-    color:#fff4d8;
-  }
-  .book-stage--mobile-single .mobile-bookmark.is-active::after { border-inline-color:rgb(255 244 216 / 35%); }
   .book-stage--mobile-single .mobile-bookmark span { font-size:10px; }
   .book-stage--mobile-single .mobile-bookmark:focus-visible { outline:3px solid var(--gold-light);outline-offset:-4px; }
   .book-stage--mobile-single .mobile-key-tools {
