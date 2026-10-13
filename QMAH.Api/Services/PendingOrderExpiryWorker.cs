@@ -36,6 +36,7 @@ public sealed class PendingOrderExpiryWorker(
             {
                 try
                 {
+                    await RemindBatchAsync(stoppingToken);
                     await ExpireBatchAsync(stoppingToken);
                 }
                 catch (Exception exception) when (!stoppingToken.IsCancellationRequested)
@@ -48,6 +49,54 @@ public sealed class PendingOrderExpiryWorker(
         {
             // 停止服務會取消計時器等待與進行中的查詢，屬於正常結束，不應回報背景服務故障。
         }
+    }
+
+    private const string ReminderTitle = "訂單待付款提醒";
+
+    /// <summary>
+    /// 信用卡訂單等了一半的時限還沒付款，提醒會員一次（以通知標題與訂單編號判斷是否已提醒過）；
+    /// 通知寫入後由 NotificationPushService 即時推播。
+    /// </summary>
+    private async Task RemindBatchAsync(CancellationToken cancellationToken)
+    {
+        var timeout = options.Value.PendingOrderTimeoutMinutes;
+        var now = DateTime.UtcNow;
+        var remindBefore = now.AddMinutes(-timeout / 2.0);
+        await using var scope = scopeFactory.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<QmahDbContext>();
+        var due = await db.StoreOrders
+            .Where(order => order.Status == "PENDING_PAYMENT"
+                && order.Payment != null
+                && order.Payment.PaymentType == "CREDIT_CARD"
+                && order.CreatedAt < remindBefore)
+            .OrderBy(order => order.CreatedAt)
+            .Select(order => new { order.UserId, order.OrderNo, order.CreatedAt })
+            .Take(50)
+            .ToListAsync(cancellationToken);
+        if (due.Count == 0)
+            return;
+
+        var orderNos = due.Select(order => order.OrderNo).ToList();
+        var reminded = await db.UserNotifications
+            .Where(item => item.Title == ReminderTitle && orderNos.Any(no => item.Content.Contains(no)))
+            .Select(item => item.Content)
+            .ToListAsync(cancellationToken);
+
+        foreach (var order in due.Where(order => !reminded.Any(content => content.Contains(order.OrderNo))))
+        {
+            var minutesLeft = Math.Max(1, (int)Math.Ceiling(order.CreatedAt.AddMinutes(timeout).Subtract(now).TotalMinutes));
+            db.UserNotifications.Add(new QMAH.Infrastructure.Models.Entities.UserNotification
+            {
+                Id = Guid.NewGuid(),
+                UserId = order.UserId,
+                Title = ReminderTitle,
+                Content = $"訂單 {order.OrderNo} 還沒付款，約 {minutesLeft} 分鐘後會自動取消，記得完成付款。",
+                TargetUrl = "/store/orders",
+                IsRead = false,
+                CreatedAt = now
+            });
+        }
+        await db.SaveChangesAsync(cancellationToken);
     }
 
     private async Task ExpireBatchAsync(CancellationToken cancellationToken)
