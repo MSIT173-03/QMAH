@@ -22,6 +22,9 @@ public interface IAiContentReviewService
     /// </summary>
     bool IsConfigured { get; }
 
+    /// <summary>供應商顯示名稱（例如 Azure AI Content Safety），寫入後台可見的執行狀態。</summary>
+    string ProviderName { get; }
+
     Task<AiReviewResult> ReviewTextAsync(string content, CancellationToken cancellationToken = default);
 
     Task<AiReviewResult> ReviewImageAsync(byte[] imageBytes, string contentType, CancellationToken cancellationToken = default);

@@ -50,7 +50,35 @@ public sealed class ContentKeywordAdminController : Controller
             + await _context.SocialComments.CountAsync(item => item.AiReviewedAt == null, cancellationToken);
         ViewData["AiReports"] = await _context.ContentReports.CountAsync(item => item.Reason == "AUTO_AI", cancellationToken);
         ViewData["AiReportsPending"] = await _context.ContentReports.CountAsync(item => item.Reason == "AUTO_AI" && item.Status == "PENDING", cancellationToken);
+        SetAiRuntimeStatus(await _context.AiReviewRuntimeStatuses.AsNoTracking().FirstOrDefaultAsync(item => item.Id == 1, cancellationToken));
         return View("~/Areas/Social/Views/SocialAdmin/ContentKeywordAdmin.cshtml", model);
+    }
+
+    /// <summary>
+    /// 把 API 背景排程回報的狀態換成後台看得懂的一句話。排程超過 3 分鐘沒回報（心跳每分鐘一次）視為沒有在跑。
+    /// 字串與樣式類別固定在這裡，視圖只負責顯示。
+    /// </summary>
+    private void SetAiRuntimeStatus(QMAH.Infrastructure.Models.Entities.AiReviewRuntimeStatus? status)
+    {
+        const int StaleAfterMinutes = 3;
+        if (status is null || status.HeartbeatAt < DateTime.UtcNow.AddMinutes(-StaleAfterMinutes))
+        {
+            ViewData["AiStatusLevel"] = "danger";
+            ViewData["AiStatusText"] = status is null
+                ? "AI 審查排程從未回報，API 程序可能沒有在執行；待複審的內容不會被處理。"
+                : $"AI 審查排程已超過 {StaleAfterMinutes} 分鐘沒有回報（最後 {status.HeartbeatAt.ToLocalTime():yyyy-MM-dd HH:mm}），API 程序可能已停止；待複審的內容不會被處理。";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(status.Provider))
+        {
+            ViewData["AiStatusLevel"] = "warning";
+            ViewData["AiStatusText"] = "AI 審查尚未啟用：API 沒有設定 ContentSafety:ApiKey 或 OpenAi:ApiKey，疑似內容只會累積在「待複審」，不會送出審查。金鑰設定後會自動補審。";
+            return;
+        }
+
+        ViewData["AiStatusLevel"] = "success";
+        ViewData["AiStatusText"] = $"AI 審查運作中，供應商：{status.Provider}（最後回報 {status.HeartbeatAt.ToLocalTime():yyyy-MM-dd HH:mm}）。";
     }
 
     [HttpPost]

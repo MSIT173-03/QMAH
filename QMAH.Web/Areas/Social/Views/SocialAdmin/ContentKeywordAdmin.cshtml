@@ -25,6 +25,7 @@
             <div class="col-12 col-md-4">
                 <div class="fw-semibold mb-1">③ AI 複審</div>
                 <div class="text-secondary small">只複審疑似內容（例如大量驚嘆號、含網址）。命中送「系統偵測：AI 複審」檢舉；信心很高時會先隱藏，到檢舉管理核准＝維持隱藏、駁回＝還原。</div>
+                <div class="alert alert-@ViewData["AiStatusLevel"] py-2 px-3 my-2 small" role="status">@ViewData["AiStatusText"]</div>
                 <div class="mt-2">
                     <span class="badge bg-blue-lt">待複審 @ViewData["AiPending"]</span>
                     <span class="badge bg-purple-lt">AI 檢舉共 @ViewData["AiReports"]</span>

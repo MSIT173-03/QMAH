@@ -28,6 +28,10 @@ public sealed class AiContentReviewWorker(
     // 一旦偵測到又恢復未設定狀態（理論上不會發生，但保留彈性）會重新警告一次。
     private bool _hasWarnedNotConfigured;
 
+    // 心跳寫入間隔：排程每 10 秒跑一次，但狀態只需要每分鐘更新一次，避免每次 tick 都寫資料庫。
+    private static readonly TimeSpan HeartbeatInterval = TimeSpan.FromMinutes(1);
+    private DateTime _lastHeartbeatAt = DateTime.MinValue;
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         using var timer = new PeriodicTimer(TimeSpan.FromSeconds(10));
@@ -40,6 +44,9 @@ public sealed class AiContentReviewWorker(
                     await using var scope = scopeFactory.CreateAsyncScope();
                     var db = scope.ServiceProvider.GetRequiredService<QmahDbContext>();
                     var aiReview = scope.ServiceProvider.GetRequiredService<IAiContentReviewService>();
+
+                    // 心跳放在金鑰檢查之前：未設定金鑰時後台仍要看得到「排程有在跑、但沒有供應商」。
+                    await RecordHeartbeatAsync(db, aiReview, stoppingToken);
 
                     if (!aiReview.IsConfigured)
                     {
@@ -73,6 +80,27 @@ public sealed class AiContentReviewWorker(
         {
             // 停止服務會取消計時器等待，屬於正常結束，不應回報背景服務故障。
         }
+    }
+
+    // 寫入單一狀態列：先嘗試 UPDATE，沒有列才 INSERT（第一次啟動或列被清掉時）。
+    // 只用 ExecuteUpdate 不經過變更追蹤，不會干擾其他請求對同一個 DbContext 的使用。
+    private async Task RecordHeartbeatAsync(QmahDbContext db, IAiContentReviewService aiReview, CancellationToken cancellationToken)
+    {
+        var now = DateTime.UtcNow;
+        if (now - _lastHeartbeatAt < HeartbeatInterval) return;
+
+        var provider = aiReview.IsConfigured ? aiReview.ProviderName : null;
+        var updated = await db.AiReviewRuntimeStatuses
+            .Where(status => status.Id == 1)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(status => status.Provider, provider)
+                .SetProperty(status => status.HeartbeatAt, now), cancellationToken);
+        if (updated == 0)
+        {
+            db.AiReviewRuntimeStatuses.Add(new AiReviewRuntimeStatus { Id = 1, Provider = provider, HeartbeatAt = now });
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        _lastHeartbeatAt = now;
     }
 
     private async Task ReviewPostsAsync(QmahDbContext db, IAiContentReviewService aiReview, CancellationToken cancellationToken)

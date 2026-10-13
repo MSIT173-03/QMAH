@@ -25,6 +25,8 @@ public sealed class OpenAiContentReviewService(
     // 不要每篇內容都各自打一次「金鑰缺少」的失敗回應，也不要把內容誤標成已審查。
     public bool IsConfigured => !string.IsNullOrWhiteSpace(configuration["OpenAi:ApiKey"]);
 
+    public string ProviderName => "OpenAI Moderation";
+
     public Task<AiReviewResult> ReviewTextAsync(string content, CancellationToken cancellationToken = default) =>
         SendAsync(JsonValue.Create(content)!, cancellationToken);
 
