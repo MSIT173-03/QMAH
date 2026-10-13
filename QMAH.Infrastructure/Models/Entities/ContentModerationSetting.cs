@@ -11,6 +11,9 @@ public partial class ContentModerationSetting
 
     public int SimHashHammingThreshold { get; set; }
 
+    /// <summary>AI 內容審查的總開關；關閉時 API 排程整批略過，關鍵字與 SimHash 規則不受影響。</summary>
+    public bool AiReviewEnabled { get; set; } = true;
+
     public Guid? UpdatedByUserId { get; set; }
 
     public DateTime UpdatedAt { get; set; }

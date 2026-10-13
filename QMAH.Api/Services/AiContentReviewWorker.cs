@@ -62,6 +62,17 @@ public sealed class AiContentReviewWorker(
                     }
                     _hasWarnedNotConfigured = false;
 
+                    // 管理員在後台關閉 AI 審查時整批略過；心跳照常寫入，後台會顯示「已暫停」而不是「沒有回報」。
+                    var aiReviewEnabled = await db.ContentModerationSettings
+                        .AsNoTracking()
+                        .Where(setting => setting.Id == ContentModerationSettingsService.SettingsRowId)
+                        .Select(setting => (bool?)setting.AiReviewEnabled)
+                        .FirstOrDefaultAsync(stoppingToken) ?? true;
+                    if (!aiReviewEnabled)
+                    {
+                        continue;
+                    }
+
                     await ReviewPostsAsync(db, aiReview, stoppingToken);
                     await ReviewCommentsAsync(db, aiReview, stoppingToken);
                     await ReviewMediaAsync(db, aiReview, stoppingToken);
@@ -102,6 +113,21 @@ public sealed class AiContentReviewWorker(
         }
         _lastHeartbeatAt = now;
     }
+
+    // 每次判斷都寫一筆審查紀錄（含通過的），後台才看得出 AI 實際審了什麼；違規時的檢舉仍由 CreateAiReport 另外建立。
+    private static AiReviewLog CreateAiLog(string targetType, Guid targetId, DateTime now, AiReviewResult result, string provider) =>
+        new()
+        {
+            ReviewedAt = now,
+            TargetType = targetType,
+            TargetId = targetId,
+            Provider = provider,
+            Flagged = result.Flagged,
+            AutoHidden = result.Flagged && (result.AutoHide || result.Score >= AutoHideScore),
+            Category = result.Category is { Length: > 60 } category ? category[..60] : result.Category,
+            Score = result.Score,
+            Summary = result.Summary is { Length: > 400 } summary ? summary[..400] : result.Summary,
+        };
 
     private async Task ReviewPostsAsync(QmahDbContext db, IAiContentReviewService aiReview, CancellationToken cancellationToken)
     {
@@ -146,6 +172,7 @@ public sealed class AiContentReviewWorker(
                     post.UpdatedAt = now;
                 }
             }
+            db.AiReviewLogs.Add(CreateAiLog("POST", post.Id, now, result, aiReview.ProviderName));
             post.AiReviewedAt = now;
         }
 
@@ -195,6 +222,7 @@ public sealed class AiContentReviewWorker(
                     comment.UpdatedAt = now;
                 }
             }
+            db.AiReviewLogs.Add(CreateAiLog("COMMENT", comment.Id, now, result, aiReview.ProviderName));
             comment.AiReviewedAt = now;
         }
 
@@ -222,6 +250,7 @@ public sealed class AiContentReviewWorker(
                 {
                     var bytes = await File.ReadAllBytesAsync(physicalPath, cancellationToken);
                     var result = await aiReview.ReviewImageAsync(bytes, media.ContentType, cancellationToken);
+                    db.AiReviewLogs.Add(CreateAiLog("MEDIA", media.Id, now, result, aiReview.ProviderName));
                     if (result.Flagged && media.PostId.HasValue)
                     {
                         var hide = result.AutoHide || result.Score >= AutoHideScore;

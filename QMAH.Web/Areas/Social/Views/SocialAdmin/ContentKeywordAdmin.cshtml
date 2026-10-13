@@ -26,6 +26,14 @@
                 <div class="fw-semibold mb-1">③ AI 複審</div>
                 <div class="text-secondary small">只複審疑似內容（例如大量驚嘆號、含網址）。命中送「系統偵測：AI 複審」檢舉；信心很高時會先隱藏，到檢舉管理核准＝維持隱藏、駁回＝還原。</div>
                 <div class="alert alert-@ViewData["AiStatusLevel"] py-2 px-3 my-2 small" role="status">@ViewData["AiStatusText"]</div>
+                @{ var aiEnabled = (bool)ViewData["AiReviewEnabled"]!; }
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <form method="post" asp-action="@(aiEnabled ? "DisableAiReview" : "EnableAiReview")" class="m-0">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-sm @(aiEnabled ? "btn-outline-danger" : "btn-primary")">@(aiEnabled ? "暫停 AI 審查" : "啟用 AI 審查")</button>
+                    </form>
+                    <span class="small text-secondary">目前：@(aiEnabled ? "開啟" : "暫停")</span>
+                </div>
                 <div class="mt-2">
                     <span class="badge bg-blue-lt">待複審 @ViewData["AiPending"]</span>
                     <span class="badge bg-purple-lt">AI 檢舉共 @ViewData["AiReports"]</span>
@@ -34,6 +42,76 @@
                 <a asp-controller="SocialReportAdmin" asp-action="Index" asp-route-keyword="AUTO_AI" class="small">查看 AI 檢舉</a>
             </div>
         </div>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header"><h2 class="card-title mb-0">AI 審核開關紀錄</h2></div>
+    <div class="card-body">
+        @{ var toggleLog = (IReadOnlyList<QMAH.Web.Areas.Social.Models.AiReviewToggleLogItem>)ViewData["AiToggleLog"]!; }
+        @if (toggleLog.Count == 0)
+        {
+            <div class="text-secondary small">尚無開啟或暫停紀錄。</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                    <thead>
+                        <tr><th>時間</th><th>操作人</th><th>動作</th><th>結果</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in toggleLog)
+                        {
+                            <tr>
+                                <td class="text-nowrap">@item.OccurredAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                <td>@(item.ActorName ?? "（未知）")</td>
+                                <td>@(item.Enabled ? "啟用 AI 審查" : "暫停 AI 審查")</td>
+                                <td>@(item.Succeeded ? "完成" : "未完成")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        <div class="text-secondary small mt-2">開關紀錄來自管理稽核紀錄（admin.AuditLogs），完整操作可到稽核紀錄頁查詢。</div>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header"><h2 class="card-title mb-0">AI 審查紀錄</h2></div>
+    <div class="card-body">
+        <div class="small mb-2">近 24 小時審查 <strong>@ViewData["AiReviewed24h"]</strong> 筆，判定違規 <strong>@ViewData["AiFlagged24h"]</strong> 筆。</div>
+        @{ var reviewLog = (IReadOnlyList<QMAH.Infrastructure.Models.Entities.AiReviewLog>)ViewData["AiReviewLog"]!; }
+        @if (reviewLog.Count == 0)
+        {
+            <div class="text-secondary small">尚無審查紀錄。審查排程啟用後，每次判斷（含通過的）都會列在這裡。</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                    <thead>
+                        <tr><th>時間</th><th>對象</th><th>供應商</th><th>結果</th><th>分類</th><th>分數</th><th>處置</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in reviewLog)
+                        {
+                            <tr>
+                                <td class="text-nowrap">@item.ReviewedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                <td>@(item.TargetType switch { "POST" => "貼文", "COMMENT" => "留言", "MEDIA" => "圖片", _ => item.TargetType })</td>
+                                <td>@item.Provider</td>
+                                <td>@(item.Flagged ? "違規" : "通過")</td>
+                                <td>@(item.Category ?? "—")</td>
+                                <td>@(item.Score?.ToString("0.00") ?? "—")</td>
+                                <td>@(item.AutoHidden ? "自動隱藏，已送檢舉" : item.Flagged ? "已送檢舉" : "—")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        <div class="text-secondary small mt-2">僅列出最近 20 筆；完整紀錄保存在資料庫 social.AiReviewLogs。</div>
     </div>
 </div>
 
