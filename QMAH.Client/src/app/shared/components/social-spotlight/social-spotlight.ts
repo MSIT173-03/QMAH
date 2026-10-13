@@ -72,19 +72,11 @@ export class SocialSpotlightComponent implements OnInit, OnDestroy {
   }
 
   private loadAnnouncements(): void {
-    this.socialApi.getPosts({ postType: 'ANNOUNCEMENT', pageSize: 12 }).subscribe({
+    this.socialApi.getPosts({ postType: 'ANNOUNCEMENT', sort: 'newest', pageSize: 100 }).subscribe({
       next: (page) => {
         // 商城公告只在商城展示，社群輪播不放；要看全部類型到「歷史公告」。
-        const announcements = page.items.filter((item) => item.boardCode !== 'STORE').slice(0, SPOTLIGHT_SIZE);
-        if (announcements.length >= SPOTLIGHT_SIZE) return this.showAnnouncements(announcements);
-        // 公告不足五則時，用最新的社群貼文補滿，輪播固定呈現最新五篇。
-        this.socialApi.getPosts({ postType: 'POST', pageSize: 12 }).subscribe({
-          next: (posts) => {
-            const filler = posts.items.filter((item) => item.boardCode !== 'STORE');
-            this.showAnnouncements([...announcements, ...filler].slice(0, SPOTLIGHT_SIZE));
-          },
-          error: () => this.showAnnouncements(announcements),
-        });
+        const announcements = page.items.filter((item) => item.postType === 'ANNOUNCEMENT' && item.boardCode !== 'STORE').slice(0, SPOTLIGHT_SIZE);
+        this.showAnnouncements(announcements);
       },
       error: () => {
         this.loaded.set(true);

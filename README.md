@@ -12,16 +12,16 @@
 
 <p align="center">
   <a href="https://github.com/MSIT173-03/QMAH/actions/workflows/build.yml"><img src="https://github.com/MSIT173-03/QMAH/actions/workflows/build.yml/badge.svg?branch=main" alt="Build"></a>
-  <a href="https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v1.0.6"><img src="https://img.shields.io/badge/database-db--v1.0.6-315E55" alt="Database snapshot db-v1.0.6"></a>
+  <a href="https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v1.0.10"><img src="https://img.shields.io/badge/database-db--v1.0.10-315E55" alt="Database snapshot db-v1.0.10"></a>
   <img src="https://img.shields.io/badge/.NET-10.0-512BD4" alt=".NET 10">
   <img src="https://img.shields.io/badge/SQL%20Server-DB--first-315E55" alt="SQL Server DB-first">
 </p>
 
 ## 目前正式 Release
 
-目前 QMAH 主程式版本是 [`v1.0.6`](https://github.com/MSIT173-03/QMAH/releases/tag/v1.0.6)，對應 [QMAH-Database `db-v1.0.6` Release](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v1.0.6)。完整資料庫從後者下載同源的 `QMAH-1.0.6.sql`、`QMAH-1.0.6.bak` 與 `SHA256SUMS.txt`；主程式 Release 只提供版本與資料庫連結，不重複附上備份。
+目前 QMAH 主程式版本是 [`v1.0.10`](https://github.com/MSIT173-03/QMAH/releases/tag/v1.0.10)，對應 [QMAH-Database `db-v1.0.10` Release](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v1.0.10)。完整資料庫從後者下載同源的 `QMAH-1.0.10.sql`、`QMAH-1.0.10.bak` 與 `SHA256SUMS.txt`；主程式 Release 只提供版本與資料庫連結，不重複附上備份。
 
-[下載資料庫 BAK](https://github.com/MSIT173-03/QMAH-Database/releases/download/db-v1.0.6/QMAH-1.0.6.bak) ｜ [下載完整 SQL](https://github.com/MSIT173-03/QMAH-Database/releases/download/db-v1.0.6/QMAH-1.0.6.sql) ｜ [SHA-256 校驗檔](https://github.com/MSIT173-03/QMAH-Database/releases/download/db-v1.0.6/SHA256SUMS.txt)
+[下載資料庫 BAK](https://github.com/MSIT173-03/QMAH-Database/releases/download/db-v1.0.10/QMAH-1.0.10.bak) ｜ [下載完整 SQL](https://github.com/MSIT173-03/QMAH-Database/releases/download/db-v1.0.10/QMAH-1.0.10.sql) ｜ [SHA-256 校驗檔](https://github.com/MSIT173-03/QMAH-Database/releases/download/db-v1.0.10/SHA256SUMS.txt)
 
 ## 專案簡介
 

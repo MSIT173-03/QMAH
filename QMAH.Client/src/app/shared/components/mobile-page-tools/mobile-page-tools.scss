@@ -44,7 +44,10 @@
   }
   .page-tools__panel strong { display: block; padding: 8px 10px; font-size: 13px; color: var(--qmah-muted); }
   .page-tools__panel button {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
     width: 100%;
     min-height: 44px;
     padding: 8px 10px;
@@ -56,5 +59,8 @@
     text-align: left;
   }
   .page-tools__panel button:hover { background: var(--qmah-surface-soft); }
+  .page-tools__panel button svg { flex: none; width: 17px; height: 17px; color: var(--page-tools-accent, var(--qmah-primary)); }
+  .page-tools__panel .page-tools__top { justify-content: flex-start; background: color-mix(in srgb, var(--page-tools-accent, var(--qmah-primary)) 10%, var(--qmah-surface-elevated)); }
+  .page-tools__trigger[aria-expanded='true'] { color: var(--page-tools-accent, var(--qmah-primary)); border-color: currentColor; }
   button:focus-visible { outline: 2px solid var(--qmah-focus); outline-offset: 2px; }
 }

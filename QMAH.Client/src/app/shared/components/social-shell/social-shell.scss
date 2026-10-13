@@ -12,7 +12,8 @@
 /* 導覽只有一種項目：圖示＋文字，圖示取所屬分組的顏色；選取時左側色條與同色淡底。 */
 .shell__group { margin-top: 12px; --group-c: var(--board-c, var(--qmah-social-action)); }
 .shell__group:first-child { margin-top: 0; }
-.shell__group--site { --group-c: var(--qmah-social-action); }
+.shell__group:not([data-board]) { --group-c: var(--qmah-terracotta-action); }
+.shell__group--site { --group-c: var(--qmah-terracotta-action); }
 .shell__group--divided { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--qmah-border); }
 .shell__group-title { display: flex; align-items: center; gap: 8px; margin: 0 8px 4px; color: var(--qmah-muted); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; }
 .shell__group-title::before { content: ''; flex: none; width: 14px; height: 4px; border-radius: 2px; background: var(--group-c); }

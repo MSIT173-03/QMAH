@@ -1,11 +1,13 @@
 import { vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { Subject } from 'rxjs';
 
 import { PostsComponent } from './posts';
+import { SocialSpotlightComponent } from '../../../shared/components/social-spotlight/social-spotlight';
 import { EventListItem, SocialPostListItem } from '../../../core/services/social-api';
 import { SocialLive } from '../../../core/services/social-live';
 
@@ -31,18 +33,18 @@ describe('PostsComponent', () => {
   afterEach(() => {
     // 公告主視覺補撈最新貼文的請求（精選公告不足時才送出）：不論測試有沒有走到 initializePosts 都清掉
     for (let round = 0; round < 3; round++) {
-      httpMock.match((r) => r.url.endsWith('/social/posts') && r.params.get('pageSize') === '12')
+      httpMock.match((r) => r.url.endsWith('/social/posts') && r.params.get('postType') === 'ANNOUNCEMENT')
         .forEach((req) => req.flush({ items: [], page: 1, pageSize: 12, totalCount: 0, totalPages: 0 }));
     }
     httpMock.verify();
   });
 
-  function initializePosts(items: SocialPostListItem[] = []): void {
+  function initializePosts(items: SocialPostListItem[] = [], announcements: SocialPostListItem[] = []): void {
     fixture.detectChanges();
     // 公告主視覺在精選公告不足時會再補一次最新貼文（第一批回應後才送出），所以清兩輪
     for (let round = 0; round < 2; round++) {
       httpMock.match(r => r.url.endsWith('/social/posts')).forEach(req => req.flush({
-        items: req.request.params.get('pageSize') === '12' ? [] : items,
+        items: req.request.params.get('postType') === 'ANNOUNCEMENT' ? announcements : items,
         page: 1, pageSize: 20, totalCount: 100, totalPages: 5,
       }));
     }
@@ -103,6 +105,14 @@ describe('PostsComponent', () => {
     httpMock.expectOne((r) => r.url.endsWith('/social/posts/popular')).flush({ window: 'WEEK', items: [] });
 
     expect(component).toBeTruthy();
+  });
+
+  it('keeps ordinary posts and store announcements out of the announcement carousel', () => {
+    const notice = { id: 'notice', boardCode: 'GENERAL', postType: 'ANNOUNCEMENT', title: '最新公告', contentPreview: '公告內容', createdAt: '2026-10-14T00:00:00Z' } as SocialPostListItem;
+    initializePosts([], [notice, { ...notice, id: 'post', postType: 'POST' }, { ...notice, id: 'store', boardCode: 'STORE' }]);
+    const spotlight = fixture.debugElement.query(By.directive(SocialSpotlightComponent)).componentInstance as SocialSpotlightComponent;
+    expect(spotlight.announcements.map(item => item.id)).toEqual(['notice']);
+    httpMock.expectNone(r => r.params.get('postType') === 'POST' && r.params.get('pageSize') !== '20');
   });
 
   it('shows recent events first and switches to popular posts with the cycle button', () => {

@@ -3,7 +3,7 @@ Description=QMAH recovery timer
 
 [Timer]
 OnBootSec=120
-OnUnitActiveSec=60
+OnUnitActiveSec=20
 AccuracySec=5
 
 [Install]

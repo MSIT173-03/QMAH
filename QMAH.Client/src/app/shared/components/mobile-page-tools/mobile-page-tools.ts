@@ -5,13 +5,13 @@ import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import { GameFocusMode } from '../../../core/services/game-focus-mode';
 import { PageReadiness } from '../../../core/services/page-readiness';
-import { LucideList, LucideX } from '@lucide/angular';
+import { LucideArrowUp, LucideChevronRight, LucideList, LucideX } from '@lucide/angular';
 
 interface PageToolTarget { selector: string; label: string; }
 
 @Component({
   selector: 'app-mobile-page-tools',
-  imports: [LucideList, LucideX],
+  imports: [LucideArrowUp, LucideChevronRight, LucideList, LucideX],
   templateUrl: './mobile-page-tools.html',
   styleUrl: './mobile-page-tools.scss',
 })
@@ -44,10 +44,15 @@ export class MobilePageTools {
 
   toggle(): void {
     if (this.open()) return this.close();
-    const scope = this.document.querySelector('.app-main') ?? this.document.documentElement;
+    const scope = this.document.querySelector('.qmah-social-page')
+      ?? this.document.querySelector('.store-app')
+      ?? this.document.querySelector('.app-main')
+      ?? this.document.documentElement;
     const colors = this.document.defaultView?.getComputedStyle(scope);
+    const accent = scope.matches('.qmah-social-page') ? '--qmah-social-action'
+      : scope.matches('.store-app') ? '--color-accent' : '--qmah-primary';
     this.topColors.set({
-      background: colors?.getPropertyValue('--color-primary').trim() || colors?.getPropertyValue('--qmah-primary').trim() || '',
+      background: colors?.getPropertyValue(accent).trim() || '',
       text: colors?.getPropertyValue('--color-primary-content').trim() || colors?.getPropertyValue('--qmah-primary-content').trim() || '',
     });
     const candidates: PageToolTarget[] = [

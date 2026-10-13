@@ -11,7 +11,10 @@
   justify-content: center;
   min-height: 100dvh;
   padding: var(--qmah-space-6);
-  background: var(--qmah-page-surface);
+  background-color: var(--qmah-page-surface);
+  background-image: linear-gradient(color-mix(in srgb, var(--qmah-page-surface) 90%, transparent), color-mix(in srgb, var(--qmah-page-surface) 82%, transparent)), url('/images/store/hero/museum-shop-still-life.webp');
+  background-size: cover;
+  background-position: center;
   color: var(--qmah-ink);
 }
 
@@ -24,6 +27,25 @@
   background: var(--qmah-surface-elevated);
   box-shadow: var(--qmah-shadow-card);
 }
+
+.demo-turnstile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-block: 12px 18px;
+  padding: 12px;
+  border: 1px solid var(--qmah-border);
+  border-radius: 10px;
+  background: var(--qmah-surface-soft);
+  cursor: pointer;
+}
+.demo-turnstile input { flex: none; width: 17px; height: 17px; accent-color: var(--qmah-primary); }
+.demo-turnstile app-qmah-icon { flex: none; width: 20px; height: 20px; color: var(--qmah-primary); }
+.demo-turnstile__body { flex: 1; min-width: 0; display: grid; gap: 3px; }
+.demo-turnstile__body strong { font-size: 13px; font-weight: 700; }
+.demo-turnstile__body small { font-size: 11px; line-height: 1.5; color: var(--qmah-text-muted); }
+.demo-turnstile__badge { flex: none; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; color: var(--qmah-text-muted); }
+.demo-turnstile:has(input:checked) { border-color: var(--qmah-primary); background: color-mix(in srgb, var(--qmah-primary) 8%, var(--qmah-surface-elevated)); }
 
 .register-header {
   margin-bottom: var(--qmah-space-8);
