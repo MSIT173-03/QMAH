@@ -1,9 +1,10 @@
+import { RouterLink } from '@angular/router';
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SocialPostContentComponent } from '../../../shared/components/social-post-content/social-post-content';
 
 import { Announcement, SocialApiService } from '../../../core/services/social-api';
-import { LucideChevronDown, LucideMegaphone, LucidePin } from '@lucide/angular';
+import { LucideChevronDown, LucideChevronRight, LucidePin } from '@lucide/angular';
 import { boardLabel } from '../social-labels';
 import { stripSocialMarkup } from '../../../shared/social-markup';
 import { SocialSpotlightComponent } from '../../../shared/components/social-spotlight/social-spotlight';
@@ -13,7 +14,7 @@ import { SocialToolbarComponent } from '../../../shared/components/social-toolba
 @Component({
   selector: 'app-announcements',
   standalone: true,
-  imports: [SocialSpotlightComponent, LucideChevronDown, LucideMegaphone, LucidePin, SocialShellComponent, SocialToolbarComponent, CommonModule, SocialPostContentComponent],
+  imports: [RouterLink, LucideChevronRight, SocialSpotlightComponent, LucideChevronDown, LucidePin, SocialShellComponent, SocialToolbarComponent, CommonModule, SocialPostContentComponent],
   templateUrl: './announcements.html',
   styleUrls: ['../social-common.scss', './announcements.scss']
 })

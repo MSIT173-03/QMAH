@@ -36,8 +36,10 @@
 .notice-row__main { display: grid; flex: 1; gap: 6px; min-width: 0; justify-items: start; }
 .notice-row__title { font-size: 0.9375rem; font-weight: 800; line-height: 1.4; color: var(--qmah-ink); overflow-wrap: anywhere; }
 .notice-row__excerpt { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: var(--qmah-muted); font-size: 0.8125rem; line-height: 1.6; }
+.notice-row { text-decoration: none; color: inherit; }
+.notice-row:hover .notice-row__chev { transform: translateX(3px); }
 .notice-row__chev { flex: none; width: 18px; height: 18px; margin-top: 2px; color: var(--qmah-muted); transition: transform 180ms; }
-.notice-card.is-open .notice-row__chev { transform: rotate(180deg); }
+
 .notice-card__body { padding: 0 16px 16px 82px; font-size: 0.9375rem; line-height: 1.85; overflow-wrap: anywhere; }
 
 :host-context([data-theme='qmahdark']) .notice-card, :host-context([data-theme='qmahdark']) .notice-date { background: #25282a; border-color: #43474a; }

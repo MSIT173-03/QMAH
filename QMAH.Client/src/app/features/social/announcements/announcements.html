@@ -58,8 +58,8 @@
     <h2 id="notice-archive-title" class="notice-archive__title">過往公告</h2>
     <ul class="notice-list">
       @for (item of earlier; track item.id) {
-        <li class="notice-card" [class.is-open]="expanded.has(item.id)">
-          <button type="button" class="notice-row" (click)="toggle(item.id)" [attr.aria-expanded]="expanded.has(item.id)">
+        <li class="notice-card">
+          <a class="notice-row" [routerLink]="['/social/posts', item.id]">
             <span class="notice-date" aria-hidden="true">
               <small>{{ item.createdAt | date: 'M月' }}</small>
               <strong>{{ item.createdAt | date: 'd' }}</strong>
@@ -67,16 +67,11 @@
             </span>
             <span class="notice-row__main">
               <span class="notice-row__title">{{ item.title }}</span>
-              @if (!expanded.has(item.id)) {
-                <span class="notice-row__excerpt">{{ excerpt(item) }}</span>
-              }
+              <span class="notice-row__excerpt">{{ excerpt(item) }}</span>
               <span class="notice-tag">{{ label(item.category) }}</span>
             </span>
-            <svg class="notice-row__chev" lucideChevronDown aria-hidden="true" focusable="false"></svg>
-          </button>
-          @if (expanded.has(item.id)) {
-            <div class="notice-card__body"><app-social-post-content [content]="item.content || item.summary || ''" /></div>
-          }
+            <svg class="notice-row__chev" lucideChevronRight aria-hidden="true" focusable="false"></svg>
+          </a>
         </li>
       }
     </ul>
