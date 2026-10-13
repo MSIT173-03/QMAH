@@ -809,6 +809,18 @@ a:focus-visible {
 }
 
 @include responsive.phone {
+  // Keep every entry in the same columns, including even cards and hover states.
+  .home-route,
+  .home-route:nth-child(even),
+  .home-route:hover,
+  .home-route:nth-child(even):hover {
+    grid-template-columns: 40px minmax(0, 1fr) 18px;
+    align-items: center;
+    padding: 18px;
+    border-left-width: 1px;
+    border-left-style: solid;
+  }
+
   // The caption belongs to the photo; reserve its own space below the member note.
   .home-hero__copy { padding-bottom: 96px; }
   .home-hero__image figcaption {
