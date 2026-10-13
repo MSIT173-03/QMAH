@@ -72,7 +72,7 @@
       @for (coupon of group.items; track coupon.id) {
       @let actionLabel = coupon.unaffordable ? unaffordableLabel : costActionLabel;
       <!-- 會員點數不夠兌換的券：整張變灰、沒有懸停效果，右側按鈕停用 -->
-      <li class="coupon-card" [class.coupon-card--unaffordable]="coupon.unaffordable">
+      <li class="coupon-card" [class.coupon-card--unaffordable]="coupon.unaffordable" [attr.data-kind]="coupon.tone.kind" [attr.data-tier]="coupon.tone.tier">
         <ng-container *ngTemplateOutlet="couponFace; context: { $implicit: coupon }" />
         <!-- 兌換所需點數：左側以虛線與券面內容分隔，上方標示「兌換」；按下後登入提示或兌換確認 -->
         <button type="button" class="coupon-card-cost" [disabled]="coupon.unaffordable"
@@ -122,7 +122,7 @@
     </div>
     <ul class="coupon-grid">
       @for (coupon of ownedCoupons(); track coupon.id) {
-      <li class="coupon-card">
+      <li class="coupon-card" [attr.data-kind]="coupon.tone.kind" [attr.data-tier]="coupon.tone.tier">
         <ng-container *ngTemplateOutlet="couponFace; context: { $implicit: coupon }" />
         <span class="coupon-card-cost coupon-card-cost--static">
           <span class="coupon-card-cost-label">{{ ownedLabel }}</span>

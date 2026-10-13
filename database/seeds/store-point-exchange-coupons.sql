@@ -6,11 +6,13 @@ INSERT @Defs VALUES
     (N'POINT_EXCHANGE_30_10',    N'鑑定點數兌換 10 元券',  N'FIXED',    10.00,  100.00,   30),
     (N'POINT_EXCHANGE_150_80',   N'鑑定點數兌換 80 元券',  N'FIXED',    80.00,  600.00,  150),
     (N'POINT_EXCHANGE_1000_800', N'鑑定點數兌換 800 元券', N'FIXED',   800.00, 4000.00, 1000),
+    (N'POINT_EXCHANGE_80_P3',    N'點數兌換 97 折券',      N'PERCENT',   3.00,  200.00,   80),
     (N'POINT_EXCHANGE_120_P5',   N'點數兌換 95 折券',      N'PERCENT',   5.00,  300.00,  120),
     (N'POINT_EXCHANGE_300_P8',   N'點數兌換 92 折券',      N'PERCENT',   8.00,  800.00,  300),
     (N'POINT_EXCHANGE_450_P10',  N'點數兌換 9 折券',       N'PERCENT',  10.00, 1500.00,  450),
     (N'POINT_EXCHANGE_650_P12',  N'點數兌換 88 折券',      N'PERCENT',  12.00, 2000.00,  650),
     (N'POINT_EXCHANGE_900_P15',  N'點數兌換 85 折券',      N'PERCENT',  15.00, 3000.00,  900),
+    (N'POINT_EXCHANGE_1200_P18', N'點數兌換 82 折券',      N'PERCENT',  18.00, 3500.00, 1200),
     (N'POINT_EXCHANGE_1500_P20', N'點數兌換 8 折券',       N'PERCENT',  20.00, 4000.00, 1500);
 
 INSERT [store].[CouponDefinitions]

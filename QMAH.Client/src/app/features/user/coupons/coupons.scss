@@ -1070,7 +1070,7 @@
 .cp-tab:hover { color: var(--qmah-ink); }
 .cp-tab.is-active { background: var(--qmah-primary); color: var(--qmah-on-primary, #fff); }
 .cp-empty { padding: 28px 0; color: var(--qmah-text-muted, #777); text-align: center; }
-.cp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; }
+.cp-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; }
 .cp-card {
   --cc: #b07a2c; --cc-line: #b8893a;
   position: relative; display: grid; grid-template-columns: 124px minmax(0, 1fr) auto; align-items: stretch; min-height: 118px; overflow: hidden;
@@ -1079,10 +1079,6 @@
   transition: transform .18s ease, box-shadow .18s ease;
 }
 .cp-card:hover { transform: translateY(-3px); box-shadow: 0 10px 22px rgb(30 36 60 / 14%); }
-.cp-card:nth-child(5n+2) { --cc: #2f7468; --cc-line: #3f8a7d; }
-.cp-card:nth-child(5n+3) { --cc: #8a3447; --cc-line: #9a4558; }
-.cp-card:nth-child(5n+4) { --cc: #43599a; --cc-line: #5568a6; }
-.cp-card:nth-child(5n) { --cc: #6b5390; --cc-line: #7c64a2; }
 .cp-card__off { display: grid; place-content: center; padding: 0 10px; background: linear-gradient(145deg, color-mix(in srgb, var(--cc) 78%, #fff), var(--cc)); border-right: 2px dashed rgb(255 255 255 / 55%); color: #fff; font-size: 22px; font-weight: 800; text-align: center; text-shadow: 0 1px 2px rgb(0 0 0 / 30%); }
 .cp-card__off::after { content: '折價券'; margin-top: 2px; font-size: 12px; font-weight: 700; letter-spacing: .2em; opacity: .9; }
 .cp-card__body { display: grid; align-content: center; gap: 3px; min-width: 0; padding: 14px 16px; }
@@ -1096,4 +1092,13 @@
 .cp-card.is-dim:hover { transform: none; box-shadow: none; }
 .cp-more { display: block; margin: 16px auto 0; padding: 6px 22px; border: 1px solid color-mix(in srgb, var(--qmah-primary) 35%, var(--qmah-border)); border-radius: 999px; background: transparent; color: var(--qmah-primary); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
 .cp-more:hover { background: color-mix(in srgb, var(--qmah-primary) 10%, transparent); }
-@media (max-width: 480px) { .cp-grid { grid-template-columns: 1fr; } .cp-card { grid-template-columns: 100px minmax(0, 1fr) auto; } .cp-title h1 { font-size: 28px; } }
+@media (max-width: 760px) { .cp-grid { grid-template-columns: 1fr; } }
+@media (max-width: 480px) { .cp-card { grid-template-columns: 100px minmax(0, 1fr) auto; } .cp-title h1 { font-size: 28px; } }
+
+/* 券色規則與商城一致：現金折抵＝金、折扣券＝靛藍，面額越大色階越深 */
+.cp-card[data-kind='cash'][data-tier='1'] { --cc: #c9a24a; --cc-line: #c9a24a; }
+.cp-card[data-kind='cash'][data-tier='2'] { --cc: #b07a2c; --cc-line: #b8893a; }
+.cp-card[data-kind='cash'][data-tier='3'] { --cc: #8a4f14; --cc-line: #8f5a22; }
+.cp-card[data-kind='percent'][data-tier='1'] { --cc: #6f86c4; --cc-line: #6f86c4; }
+.cp-card[data-kind='percent'][data-tier='2'] { --cc: #43599a; --cc-line: #5568a6; }
+.cp-card[data-kind='percent'][data-tier='3'] { --cc: #2f3a78; --cc-line: #3a4682; }

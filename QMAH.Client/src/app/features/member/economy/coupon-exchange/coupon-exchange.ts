@@ -5,6 +5,7 @@ import { catchError, of } from 'rxjs';
 
 import { CouponApi } from '../../../../store/api';
 import { StoreCoupon } from '../../../../store/api/api.models';
+import { couponToneOf } from '../../../../store/shared/coupon-tone';
 import { COUPON_STORE_PATH } from '../../../../store/shared/paths';
 import { problemDetail } from '../../../../store/shared/problem-detail';
 import { QmahIconComponent } from '../../../../shared/components/qmah-icon/qmah-icon';
@@ -41,7 +42,7 @@ const REDIRECT_DELAY_MS = 1600;
       } @else {
         <ul class="exchange-grid">
           @for (coupon of visible(); track coupon.id) {
-            <li class="exchange-card" [class.is-locked]="coupon.pointCost > balanceValue()">
+            <li class="exchange-card" [class.is-locked]="coupon.pointCost > balanceValue()" [attr.data-kind]="tone(coupon.off).kind" [attr.data-tier]="tone(coupon.off).tier">
               <span class="exchange-off">{{ coupon.off }}</span>
               <span class="exchange-body">
                 <strong>{{ coupon.title }}</strong>
@@ -100,6 +101,10 @@ export class CouponExchange {
       .getStoreCoupons()
       .pipe(catchError(() => of([] as StoreCoupon[])))
       .subscribe((list) => this.coupons.set([...list].sort((a, b) => a.pointCost - b.pointCost)));
+  }
+
+  protected tone(off: string) {
+    return couponToneOf(off);
   }
 
   protected redeem(coupon: StoreCoupon): void {

@@ -25,7 +25,7 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(max(300px, calc((100% - 2 * var(--coupon-grid-gap)) / 3)), 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--coupon-grid-gap);
 }
 
@@ -332,12 +332,14 @@ button.coupon-card-cost:hover .coupon-card-cost-label { background: var(--cc-dee
 :host-context([data-theme='qmahdark']) .coupon-card { border-color: color-mix(in srgb, var(--cc-lt) 30%, var(--color-line)); }
 :host-context([data-theme='qmahdark']) .coupon-card::before, :host-context([data-theme='qmahdark']) .coupon-card::after { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cc-lt) 30%, var(--color-line)); }
 
-/* 券色：金、玉青、酒紅、靛藍、墨紫依序輪替，皆為低飽和的深色調 */
+/* 券色規則：券種定色相（現金折抵＝金、折扣券＝靛藍），面額越大色階越深；規則集中在 shared/coupon-tone.ts */
 .coupon-card { --cc-lt:#d9b25c; --cc-dk:#b07a2c; --cc-deep:#8f5f1c; --cc-line:#b8893a; }
-.coupon-card:nth-child(5n+2) { --cc-lt:#5fa59a; --cc-dk:#2f7468; --cc-deep:#235a50; --cc-line:#3f8a7d; }
-.coupon-card:nth-child(5n+3) { --cc-lt:#b5586a; --cc-dk:#8a3447; --cc-deep:#6c2636; --cc-line:#9a4558; }
-.coupon-card:nth-child(5n+4) { --cc-lt:#6f86c4; --cc-dk:#43599a; --cc-deep:#33447a; --cc-line:#5568a6; }
-.coupon-card:nth-child(5n) { --cc-lt:#9a82bd; --cc-dk:#6b5390; --cc-deep:#533f74; --cc-line:#7c64a2; }
+.coupon-card[data-kind='cash'][data-tier='1'] { --cc-lt:#e0c068; --cc-dk:#c9a24a; --cc-deep:#a98530; --cc-line:#c9a24a; }
+.coupon-card[data-kind='cash'][data-tier='2'] { --cc-lt:#d9b25c; --cc-dk:#b07a2c; --cc-deep:#8f5f1c; --cc-line:#b8893a; }
+.coupon-card[data-kind='cash'][data-tier='3'] { --cc-lt:#b9803a; --cc-dk:#8a4f14; --cc-deep:#6a3b0c; --cc-line:#8f5a22; }
+.coupon-card[data-kind='percent'][data-tier='1'] { --cc-lt:#8da0d4; --cc-dk:#6f86c4; --cc-deep:#566cab; --cc-line:#6f86c4; }
+.coupon-card[data-kind='percent'][data-tier='2'] { --cc-lt:#6a80c0; --cc-dk:#43599a; --cc-deep:#33447a; --cc-line:#5568a6; }
+.coupon-card[data-kind='percent'][data-tier='3'] { --cc-lt:#4a5a9c; --cc-dk:#2f3a78; --cc-deep:#232c5c; --cc-line:#3a4682; }
 @media (max-width: 460px) { .coupon-card { --stub: 104px; --cost: 92px; } .coupon-card-off { font-size: 19px; } }
 
 /* 「我的折價券」背包：區塊標題旁放品牌 mark，空狀態做成一張虛線券夾 */
@@ -422,3 +424,5 @@ button.coupon-card-cost:hover .coupon-card-cost-label { background: var(--cc-dee
 .coupon-tabs--lg .coupon-tab { padding: 8px 24px; font-size: 16px; }
 .coupon-tab-count { margin-left: 8px; padding: 1px 8px; border-radius: 999px; background: color-mix(in srgb, currentColor 16%, transparent); font-size: 12px; }
 .coupon-points { padding: 6px 16px; border-radius: 999px; background: color-mix(in srgb, var(--color-accent) 10%, var(--color-surface)); color: var(--color-muted); font-size: 14px; strong { color: var(--color-ink); font-size: 17px; font-variant-numeric: tabular-nums; } }
+
+@media (max-width: 760px) { .coupon-grid { grid-template-columns: minmax(0, 1fr); } }

@@ -12,6 +12,7 @@ import {
   BackToMember
 } from '../../../shared/back-to-member/back-to-member';
 import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
+import { couponToneOf } from '../../../store/shared/coupon-tone';
 import { MemberApi } from '../../../store/api/member.api';
 import { CouponExchange } from '../../member/economy/coupon-exchange/coupon-exchange';
 
@@ -134,11 +135,15 @@ export class Coupons implements OnInit {
   }
 
   /** 預設先顯示的張數（三欄兩排以上），其餘展開 */
-  readonly previewCount = 9;
+  readonly previewCount = 8;
   expanded = false;
 
   get visibleCoupons(): MemberCoupon[] {
     return this.expanded ? this.filteredCoupons : this.filteredCoupons.slice(0, this.previewCount);
+  }
+
+  toneOf(coupon: MemberCoupon) {
+    return couponToneOf(this.offText(coupon));
   }
 
   /** 票券左塊的大字：折扣券「15% OFF」、現金券「NT$300」，與商城票券一致 */

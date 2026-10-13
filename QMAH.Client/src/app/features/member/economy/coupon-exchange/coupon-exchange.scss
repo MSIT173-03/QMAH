@@ -13,7 +13,7 @@
 .exchange-message.is-error { background: color-mix(in srgb, #b23b32 12%, transparent); color: #b23b32; }
 .exchange-empty { margin: 18px 0 0; color: var(--economy-muted); }
 
-.exchange-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; margin: 16px 0 0; padding: 0; list-style: none; }
+.exchange-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 16px 0 0; padding: 0; list-style: none; }
 .exchange-card { display: flex; align-items: stretch; gap: 12px; padding: 12px; border: 1px dashed var(--economy-line, rgb(0 0 0 / 18%)); border-radius: 14px; background: color-mix(in srgb, var(--economy-gold-soft, #f6efdd) 40%, var(--economy-surface, #fff)); }
 .exchange-card.is-locked { opacity: 0.55; filter: grayscale(0.4); }
 .exchange-off { display: grid; place-items: center; min-width: 88px; padding: 0 8px; border-right: 1px dashed var(--economy-line, rgb(0 0 0 / 18%)); font-size: 1.125rem; font-weight: 800; color: var(--economy-gold, #8a6710); text-align: center; }
@@ -33,11 +33,17 @@
 
 /* 券色與商城兌換商店一致：金、玉青、酒紅、靛藍、墨紫輪替，券面左塊填滿色彩 */
 .exchange-card { --ec: #b07a2c; border-style: solid; border-color: color-mix(in srgb, var(--ec) 35%, var(--economy-line, #ddd)); background: color-mix(in srgb, var(--ec) 7%, var(--economy-surface, #fff)); }
-.exchange-card:nth-child(5n+2) { --ec: #2f7468; }
-.exchange-card:nth-child(5n+3) { --ec: #8a3447; }
-.exchange-card:nth-child(5n+4) { --ec: #43599a; }
-.exchange-card:nth-child(5n) { --ec: #6b5390; }
 .exchange-off { border-right: 0; border-radius: 10px; background: var(--ec); color: #fff; text-shadow: 0 1px 2px rgb(0 0 0 / 25%); }
 .exchange-cost { border-color: var(--ec); background: color-mix(in srgb, var(--ec) 10%, transparent); }
 .exchange-cost:hover:not(:disabled) { background: var(--ec); color: #fff; }
 .exchange-cost:hover:not(:disabled) small { color: rgb(255 255 255 / 85%); }
+
+/* 券色規則與商城一致：現金折抵＝金、折扣券＝靛藍，面額越大色階越深 */
+.exchange-card[data-kind='cash'][data-tier='1'] { --ec: #c9a24a; }
+.exchange-card[data-kind='cash'][data-tier='2'] { --ec: #b07a2c; }
+.exchange-card[data-kind='cash'][data-tier='3'] { --ec: #8a4f14; }
+.exchange-card[data-kind='percent'][data-tier='1'] { --ec: #6f86c4; }
+.exchange-card[data-kind='percent'][data-tier='2'] { --ec: #43599a; }
+.exchange-card[data-kind='percent'][data-tier='3'] { --ec: #2f3a78; }
+
+@media (max-width: 700px) { .exchange-grid { grid-template-columns: minmax(0, 1fr); } }

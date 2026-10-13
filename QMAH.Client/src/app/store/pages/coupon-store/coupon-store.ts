@@ -21,6 +21,7 @@ import { StoreLink } from '../../shared/store-link';
 import { injectCartState } from '../../shared/page-state';
 import { problemDetail } from '../../shared/problem-detail';
 import { formatDateMD, formatNumber } from '../../shared/format';
+import { couponToneOf } from '../../shared/coupon-tone';
 
 /** 兌換成功後頁面會重新整理，結果訊息暫存在 sessionStorage，等重新載入完成後再顯示 */
 const REDEEM_NOTICE_KEY = 'qmah.store.couponRedeemNotice';
@@ -106,6 +107,7 @@ export class CouponStore {
     const points = this.points();
     return (this.result() ?? []).map((coupon) => ({
       ...coupon,
+      tone: couponToneOf(coupon.off),
       costLabel: `${formatNumber(coupon.pointCost)} 點`,
       // 點數不夠兌換：券面變灰、不能按（訪客與點數尚未取得時不判斷）
       unaffordable: points !== null && coupon.pointCost > points,
@@ -118,8 +120,8 @@ export class CouponStore {
   protected readonly pointsLabel = computed(() => (this.points() === null ? null : formatNumber(this.points() ?? 0)));
 
   /** 每一區預設先顯示的張數（約兩排）；其餘按「顯示全部」展開 */
-  protected readonly GROUP_PREVIEW = 6;
-  protected readonly OWNED_PREVIEW = 6;
+  protected readonly GROUP_PREVIEW = 8;
+  protected readonly OWNED_PREVIEW = 8;
   /** 券種篩選與「只看點數夠換的」 */
   protected readonly shopFilter = signal<'all' | 'cash' | 'percent'>('all');
   protected readonly onlyAffordable = signal(false);
@@ -182,6 +184,7 @@ export class CouponStore {
       .map((coupon) => ({
         id: coupon.id,
         off: coupon.off,
+        tone: couponToneOf(coupon.off),
         title: coupon.title,
         metas: [coupon.cond, coupon.due ? `${coupon.due} 前有效` : '長期有效'],
         dueLabel: coupon.due ? `${formatDateMD(coupon.due)} 到期` : '長期有效',
