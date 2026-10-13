@@ -18,6 +18,9 @@ const ANNOUNCEMENT_FALLBACK_IMAGES = [
   '/images/store/hero/museum-shop-shelf.webp',
 ];
 
+/** 輪播固定呈現的篇數 */
+const SPOTLIGHT_SIZE = 5;
+
 /** 換頁時不重抓：第二次進來直接用上一次的公告，版面一開始就是完整的，不會跳動。 */
 let cachedAnnouncements: SocialPostListItem[] | null = null;
 
@@ -72,19 +75,31 @@ export class SocialSpotlightComponent implements OnInit, OnDestroy {
     this.socialApi.getPosts({ postType: 'ANNOUNCEMENT', pageSize: 12 }).subscribe({
       next: (page) => {
         // 商城公告只在商城展示，社群輪播不放；要看全部類型到「歷史公告」。
-        const items = page.items.filter((item) => item.boardCode !== 'STORE').slice(0, 5);
-        cachedAnnouncements = items;
-        this.announcements = items;
-        if (this.currentAnnouncementIndex >= items.length) this.currentAnnouncementIndex = 0;
-        this.loaded.set(true);
-        this.syncAnnouncementTimer();
-        this.cdr.detectChanges();
+        const announcements = page.items.filter((item) => item.boardCode !== 'STORE').slice(0, SPOTLIGHT_SIZE);
+        if (announcements.length >= SPOTLIGHT_SIZE) return this.showAnnouncements(announcements);
+        // 公告不足五則時，用最新的社群貼文補滿，輪播固定呈現最新五篇。
+        this.socialApi.getPosts({ postType: 'POST', pageSize: 12 }).subscribe({
+          next: (posts) => {
+            const filler = posts.items.filter((item) => item.boardCode !== 'STORE');
+            this.showAnnouncements([...announcements, ...filler].slice(0, SPOTLIGHT_SIZE));
+          },
+          error: () => this.showAnnouncements(announcements),
+        });
       },
       error: () => {
         this.loaded.set(true);
         this.cdr.detectChanges();
       }
     });
+  }
+
+  private showAnnouncements(items: SocialPostListItem[]): void {
+    cachedAnnouncements = items;
+    this.announcements = items;
+    if (this.currentAnnouncementIndex >= items.length) this.currentAnnouncementIndex = 0;
+    this.loaded.set(true);
+    this.syncAnnouncementTimer();
+    this.cdr.detectChanges();
   }
 
   private readAnnouncementCollapsePreference(): boolean {

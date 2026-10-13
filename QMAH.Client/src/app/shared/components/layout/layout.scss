@@ -765,3 +765,103 @@ textarea:focus-visible {
 .app-account-panel .app-account-panel__points { margin-left: auto; min-height: 0; padding: 3px 10px; gap: 4px; border-radius: 999px; background: color-mix(in srgb, #b58a1b 14%, transparent); color: #8a6710; font-size: 0.8125rem; font-weight: 800; }
 :host-context([data-theme='qmahdark']) .app-account-panel .app-account-panel__points { color: #e6b94d; }
 .app-account-panel a, .app-account-panel button { min-height: 46px; }
+
+/* ===== 帳號選單重新設計：名片卡頭＋點數列＋三欄捷徑磚＋底部登出列 ===== */
+.app-account-panel:not([hidden]) { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; width: min(344px, calc(100vw - 16px)); padding: 8px; }
+.app-account-panel .app-account-panel__who,
+.app-account-panel .app-account-panel__points,
+.app-account-panel .app-logout { grid-column: 1 / -1; }
+.app-account-panel .app-account-panel__who { margin: 0; background: none; padding: 6px 6px 2px; }
+.app-account-panel .app-account-panel__points {
+  display: flex; align-items: center; gap: 10px; min-height: 0; margin: 0 0 4px; padding: 10px 12px; border-radius: 12px;
+  background: linear-gradient(135deg, color-mix(in srgb, #b58a1b 20%, transparent), color-mix(in srgb, #b58a1b 7%, transparent));
+  color: var(--qmah-ink); font-size: 0.9375rem; font-weight: 400;
+}
+.app-account-panel__points-icon { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #b58a1b; color: #fff; }
+.app-account-panel__points-main { display: grid; line-height: 1.2; }
+.app-account-panel__points-main small { color: var(--qmah-muted); font-size: 0.75rem; }
+.app-account-panel__points-main strong { font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+.app-account-panel__points-go { margin-left: auto; color: #8a6710; font-size: 0.8125rem; font-weight: 700; }
+:host-context([data-theme='qmahdark']) .app-account-panel__points-go { color: #e6b94d; }
+.app-account-panel > a:not(.app-account-panel__points) {
+  flex-direction: column; justify-content: center; gap: 6px; min-height: 78px; padding: 10px 4px; border-radius: 12px; text-align: center; font-size: 0.8125rem; font-weight: 700;
+  border: 1px solid color-mix(in srgb, var(--qmah-border) 70%, transparent);
+}
+.app-account-panel > a:not(.app-account-panel__points):hover { border-color: color-mix(in srgb, var(--i, currentColor) 45%, transparent); background: color-mix(in srgb, var(--i, currentColor) 8%, transparent); }
+.app-account-panel .app-logout { justify-content: center; min-height: 40px; margin-top: 2px; border-radius: 10px; font-size: 0.875rem; font-weight: 700; border: 0; background: transparent; color: var(--qmah-danger); }
+.app-account-panel .app-logout .app-account-panel__icon { width: 24px; height: 24px; background: none; }
+.app-account-panel .app-logout .app-account-panel__icon app-qmah-icon { width: 16px; height: 16px; }
+
+/* ===== 會員中心各子頁：整體質感（只作用於 data-area='user'，圖鑑與遊戲不受影響） ===== */
+.app-shell[data-area='user'] .app-main {
+  background:
+    radial-gradient(900px 320px at 12% -80px, color-mix(in srgb, #3b4a7a 14%, transparent), transparent 70%),
+    radial-gradient(700px 280px at 92% -60px, color-mix(in srgb, #b58a1b 12%, transparent), transparent 70%),
+    var(--qmah-bg, transparent);
+}
+:host-context([data-theme='qmahdark']) .app-shell[data-area='user'] .app-main {
+  background:
+    radial-gradient(900px 320px at 12% -80px, color-mix(in srgb, #8aa2ff 12%, transparent), transparent 70%),
+    radial-gradient(700px 280px at 92% -60px, color-mix(in srgb, #e6b94d 9%, transparent), transparent 70%),
+    var(--qmah-bg, transparent);
+}
+/* 卡片：統一的柔和陰影，滑過時微微浮起、邊框轉為靛藍 */
+.app-shell[data-area='user'] :is(.summary-card, .coupon-ticket, .available-card, .security-card, .address-card, .achievement-card, .ledger) {
+  box-shadow: 0 1px 2px rgb(30 36 60 / 8%), 0 6px 18px rgb(30 36 60 / 6%);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+.app-shell[data-area='user'] :is(.summary-card, .coupon-ticket, .available-card, .address-card, .achievement-card):hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, #3b4a7a 40%, transparent);
+  box-shadow: 0 2px 4px rgb(30 36 60 / 10%), 0 14px 28px rgb(30 36 60 / 12%);
+}
+/* 頁面標題：下方一條靛藍到金色的短漸層線，取代單調的純文字標題 */
+.app-shell[data-area='user'] :is(.page-header, .page-heading) h1::after {
+  content: ''; display: block; width: 56px; height: 4px; margin-top: 10px; border-radius: 999px;
+  background: linear-gradient(90deg, #3b4a7a, #b58a1b);
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-shell[data-area='user'] :is(.summary-card, .coupon-ticket, .available-card, .address-card, .achievement-card) { transition: none; transform: none !important; }
+}
+
+/* 帳號選單：展開在頁首下緣之外（按鈕垂直置中於頁首，所以要多推「按鈕到頁首底邊」的距離） */
+.app-account-panel { top: calc(100% + (var(--app-header-height, 72px) - var(--qmah-control-height, 44px)) / 2 + 6px); }
+
+/* 社群：切到某個看板（或活動頁）時，整頁的主色／副色跟著看板族群換：
+   探索／圖鑑／評論／導覽＝青，活動／商店＝蜜金，一般／問答／遊戲＝梅紫（顏色來自 styles.scss 的 --board-c）。 */
+.app-shell[data-area='social'] .qmah-social-page[data-board] {
+  --color-primary: var(--board-c);
+  --qmah-social-action: var(--board-c);
+  --qmah-primary: var(--board-c);
+  --color-primary-soft: color-mix(in srgb, var(--board-c) 14%, var(--qmah-surface, #fff));
+  --qmah-social-soft: color-mix(in srgb, var(--board-c) 14%, var(--qmah-surface, #fff));
+}
+:host-context([data-theme='qmahdark']) .app-shell[data-area='social'] .qmah-social-page[data-board] {
+  --color-primary: color-mix(in srgb, var(--board-c) 55%, #fff);
+  --qmah-social-action: color-mix(in srgb, var(--board-c) 55%, #fff);
+  --qmah-primary: color-mix(in srgb, var(--board-c) 55%, #fff);
+}
+.app-shell[data-area='social'] .qmah-social-page { transition: --board-c 200ms; }
+
+/* 會員中心各子頁：內容寬度與頁首同一個版心（1440px、左右留白相同），不再比頁首窄一截。只作用於 data-area='user'。 */
+.app-shell[data-area='user'] :is(.achievements-page, .address-page, .coupons-page, .daily-page, .member-container, .notifications-page, .page-container, .security-page, .economy-page) {
+  max-width: 1440px;
+  padding-inline: clamp(var(--qmah-space-4, 16px), 3vw, var(--qmah-space-10, 40px));
+}
+
+/* 「返回會員中心」在每個子頁的位置一致：頁面最外層上方留白相同，左右只由內層版心決定 */
+.app-shell[data-area='user'] :is(.achievements-page, .address-page, .coupons-page, .daily-page, .notifications-page, .security-page, .economy-page, .profile-page) {
+  padding-top: 24px;
+}
+.app-shell[data-area='user'] .profile-page { padding-inline: 0; }
+.app-shell[data-area='user'] .profile-page .page-container { padding-top: 0; }
+
+/* 管理後台入口只有管理員看得到：整排扁長的橫條，明顯又不佔格子 */
+.app-account-panel .app-admin-entry.is-admin {
+  grid-column: 1 / -1;
+  display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 10px;
+  min-height: 44px; padding: 8px 16px;
+  border-color: color-mix(in srgb, var(--qmah-honey-action, #b8862b) 55%, transparent);
+  background: color-mix(in srgb, var(--qmah-honey-action, #b8862b) 12%, transparent);
+  font-weight: 700;
+}

@@ -128,14 +128,13 @@
   height: 14px;
 }
 
-/* ui-integration: 公告輪播對齊商城首頁主視覺（store/pages/home/hero-carousel.scss）的版型與節奏：
-   滿版底圖 + 淡色遮罩、左下浮動文案卡、右下細條指示點與暫停鈕。
-   強調色沿用 Social 的 --qmah-social-action，若要與商城完全同色，改成 --qmah-primary-hover 即可。 */
+/* 公告輪播（分割式版型）：左側文案面板、右側照片，照片左緣淡出融入面板；
+   控制列固定在文案面板底部，不蓋住照片也不蓋住文字。商城首頁輪播（store/pages/home/hero-carousel）用同一套版型。 */
 .social-hero {
   --social-hero-accent: var(--qmah-social-action);
   position: relative;
   overflow: hidden;
-  background: var(--qmah-surface-muted);
+  background: var(--qmah-surface-elevated);
 }
 
 .social-hero__track {
@@ -146,60 +145,54 @@
 }
 
 .social-hero__slide {
-  position: relative;
-  isolation: isolate;
   flex: 0 0 100%;
   min-width: 0;
-  /* ui-integration: 公告是 supporting context；輪播從 340px 降到 240px，貼文才有機會進首屏。 */
-  min-height: 240px;
+  position: relative;
+  min-height: clamp(220px, 15vw, 244px);
   display: flex;
-  align-items: flex-end;
-  padding: var(--qmah-space-8);
+  align-items: center;
   color: var(--qmah-ink);
-  background: var(--qmah-surface-muted);
+  background: var(--qmah-surface-elevated);
   text-decoration: none;
 }
 
 .social-hero__image {
   position: absolute;
-  inset: 0;
-  z-index: -2;
+  top: 0;
+  right: 0;
+  bottom: 0;
   display: block;
-  width: 100%;
+  width: 58%;
   height: 100%;
   object-fit: cover;
   object-position: center;
-}
-
-.social-hero__slide::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: color-mix(in srgb, var(--qmah-surface-elevated) 16%, transparent);
+  mask-image: linear-gradient(to right, transparent 0, #000 30%);
 }
 
 .social-hero__body {
-  max-width: 480px;
+  position: relative;
+  z-index: 1;
+  width: 44%;
   display: flex;
   flex-direction: column;
-  gap: var(--qmah-space-3);
-  padding: var(--qmah-space-4) var(--qmah-space-5);
-  border: 1px solid color-mix(in srgb, var(--social-hero-accent) 24%, var(--qmah-border));
-  border-radius: var(--qmah-radius-card);
-  background: color-mix(in srgb, var(--qmah-surface-elevated) 91%, transparent);
-  box-shadow: var(--qmah-shadow-float);
+  justify-content: center;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 8px 54px 68px;
 }
+
+.social-hero__meta { display: flex; align-items: center; gap: 10px; margin: 0; color: var(--qmah-muted); font-size: 12px; }
+.social-hero__tag { padding: 1px 9px; border-radius: 999px; background: color-mix(in srgb, var(--social-hero-accent) 14%, transparent); color: var(--social-hero-accent); font-weight: 700; }
 
 .social-hero__title {
   margin: 0;
   font-family: var(--qmah-font-sans);
-  /* ui-integration: 輪播標題不得大過頁面 h1（page-title 28–42px），避免層級顛倒。 */
-  font-size: clamp(20px, 2.2vw, 26px);
-  line-height: var(--qmah-type-heading-leading);
+  /* 輪播標題不得大過頁面 h1（page-title 28–42px），避免層級顛倒。 */
+  font-size: clamp(18px, 1.6vw, 24px);
+  line-height: 1.4;
   font-weight: 700;
   color: var(--qmah-ink);
-  text-wrap: pretty;
+  text-wrap: balance;
   overflow-wrap: anywhere;
 }
 
@@ -212,123 +205,135 @@
   color: var(--qmah-text-muted);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
-/* 視覺上對應商城的「立即選購」實心按鈕；整張投影片本身就是連結，所以這裡只是 span。 */
+/* 整張投影片本身就是連結，所以這裡只是 span。 */
 .social-hero__cta {
-  align-self: flex-start;
   margin-top: 4px;
-  min-height: var(--qmah-control-height);
+  min-height: 36px;
   display: inline-flex;
   align-items: center;
-  padding: var(--qmah-space-2) var(--qmah-button-padding-x);
-  border: 1px solid var(--social-hero-accent);
+  padding: 4px 18px;
   border-radius: var(--qmah-radius-control);
   background: var(--social-hero-accent);
   color: var(--qmah-on-dark);
   font-size: var(--qmah-type-label-size);
-  letter-spacing: 0.14em;
+  letter-spacing: 0.08em;
   transition: filter 160ms;
 }
 
-.social-hero__slide:hover .social-hero__cta {
-  filter: brightness(0.92);
-}
+.social-hero__slide:hover .social-hero__cta { filter: brightness(0.92); }
 
 .social-hero__controls {
   position: absolute;
-  right: 16px;
-  bottom: 14px;
+  left: 62px;
+  bottom: 12px;
+  z-index: 2;
   display: flex;
   align-items: center;
-  gap: var(--qmah-space-2);
+  gap: 6px;
 }
 
-.social-hero__dots {
-  display: flex;
-  align-items: center;
-  gap: var(--qmah-space-1);
-}
+.social-hero__count { min-width: 34px; color: var(--qmah-muted); font-size: 12px; font-variant-numeric: tabular-nums; text-align: center; }
 
-.social-hero__dot {
-  width: 26px;
-  height: 3px;
-  /* 全站按鈕有 44px 觸控 min-height 基線，指示條要明確覆寫才不會被撐高（同商城輪播）。 */
-  min-height: 3px;
-  border: 0;
+/* 前後切換：左右兩側垂直置中，手機也好按（沿用原版手感） */
+.social-hero__arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
   padding: 0;
-  background: color-mix(in srgb, var(--qmah-border) 82%, var(--qmah-ink));
+  transform: translateY(-50%);
+  border: 1px solid color-mix(in srgb, var(--qmah-ink) 18%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--qmah-surface-elevated) 92%, transparent);
+  color: var(--qmah-ink);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 16%);
   cursor: pointer;
+  transition: background 160ms, color 160ms;
 }
+.social-hero__arrow svg { width: 20px; height: 20px; }
+.social-hero__arrow--prev { left: 12px; }
+.social-hero__arrow--next { right: 12px; }
+.social-hero__arrow:hover { background: var(--social-hero-accent); color: #fff; }
+.social-hero__arrow:focus-visible { outline: 2px solid var(--social-hero-accent); outline-offset: 2px; }
 
-.social-hero__dot--active {
-  background: var(--social-hero-accent);
+.social-hero__dots { display: flex; align-items: center; justify-content: center; gap: 2px; }
+
+/* 指示條：外層是 28x24 的觸控區，內層才是可見的短條；目前這一張拉長並用強調色 */
+.social-hero__dot {
+  position: relative;
+  width: 28px;
+  height: 24px;
+  min-height: 24px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  transition: width 200ms;
 }
+.social-hero__dot::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 4px;
+  border-radius: 999px;
+  transform: translateY(-50%);
+  background: color-mix(in srgb, var(--qmah-ink) 28%, transparent);
+  transition: background 160ms;
+}
+.social-hero__dot:hover::before { background: var(--social-hero-accent); }
+.social-hero__dot--active { width: 40px; }
+.social-hero__dot--active::before { background: var(--social-hero-accent); }
 
 .social-hero__play-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  min-height: 32px;
-  padding: 5px 10px;
-  border: 1px solid color-mix(in srgb, var(--qmah-ink) 22%, transparent);
-  border-radius: var(--qmah-radius-control);
-  background: color-mix(in srgb, var(--qmah-surface-elevated) 86%, transparent);
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  min-height: 30px;
+  padding: 0;
+  border: 1px solid var(--qmah-border);
+  border-radius: 50%;
+  background: transparent;
   color: var(--qmah-ink);
-  font-size: 11px;
   cursor: pointer;
   transition: background 160ms, border-color 160ms, color 160ms;
 }
-
-.social-hero__play-toggle:hover {
-  border-color: var(--qmah-ink);
-  background: var(--qmah-surface-elevated);
-}
-
+.social-hero__play-toggle:hover { border-color: var(--qmah-ink); }
 .social-hero__play-toggle--paused {
   border-color: var(--social-hero-accent);
-  background: color-mix(in srgb, var(--social-hero-accent) 18%, var(--qmah-surface-elevated));
+  background: color-mix(in srgb, var(--social-hero-accent) 14%, var(--qmah-surface-elevated));
   color: var(--social-hero-accent);
 }
 
-.social-hero__play-toggle--paused:hover {
-  border-color: var(--social-hero-accent);
-  background: color-mix(in srgb, var(--social-hero-accent) 28%, var(--qmah-surface-elevated));
+/* 中等寬度：文字欄加寬，照片縮窄 */
+@media (max-width: 1000px) {
+  .social-hero__body { width: 52%; padding-right: 0; }
+  .social-hero__image { width: 50%; }
+}
+
+@media (max-width: 720px) {
+  .social-hero__slide { height: auto; min-height: 0; flex-direction: column; align-items: stretch; }
+  .social-hero__image { position: static; width: 100%; height: 120px; mask-image: linear-gradient(to bottom, #000 72%, transparent); }
+  .social-hero__body { width: auto; padding: 4px 18px 8px; }
+  .social-hero__controls { position: static; justify-content: center; margin: 0 0 14px; }
+  .social-hero__arrow { top: 60px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .social-hero__track {
-    transition: none;
-  }
+  .social-hero__track, .social-hero__dot { transition: none; }
 }
 
 
 /* 載入中的骨架：高度與展開後的輪播相同，換頁與首次載入時版面不會跳動 */
 :host { display: block; }
 .social-spotlight-skeleton { height: 120px; margin-bottom: 24px; border-radius: 12px; background: color-mix(in srgb, var(--qmah-ink) 6%, transparent); }
-
-/* 更寬的文案卡、日期與分類一行、前後切換箭頭（置於左右兩側中間，手機也好按） */
-.social-hero__slide { min-height: 260px; padding: var(--qmah-space-6) 64px var(--qmah-space-6) 64px; }
-.social-hero__body { width: min(100%, 640px); max-width: none; gap: 8px; padding: 18px 22px; }
-.social-hero__meta { display: flex; align-items: center; gap: 10px; margin: 0; color: var(--qmah-muted); font-size: 12px; }
-.social-hero__tag { padding: 1px 9px; border-radius: 999px; background: color-mix(in srgb, var(--social-hero-accent) 14%, transparent); color: var(--social-hero-accent); font-weight: 700; }
-.social-hero__title { font-size: clamp(18px, 1.9vw, 23px); line-height: 1.4; text-wrap: balance; }
-.social-hero__desc { -webkit-line-clamp: 3; line-clamp: 3; }
-.social-hero__cta { margin-top: 2px; min-height: 34px; padding: 4px 16px; letter-spacing: 0.08em; }
-.social-hero__arrow {
-  position: absolute; top: 50%; z-index: 2; display: grid; place-items: center; width: 40px; height: 40px; min-height: 40px; padding: 0; transform: translateY(-50%);
-  border: 1px solid color-mix(in srgb, var(--qmah-ink) 18%, transparent); border-radius: 50%; background: color-mix(in srgb, var(--qmah-surface-elevated) 92%, transparent); color: var(--qmah-ink);
-  box-shadow: 0 2px 8px rgb(0 0 0 / 16%); cursor: pointer; transition: background 160ms, color 160ms, transform 160ms;
-}
-.social-hero__arrow svg { width: 20px; height: 20px; }
-.social-hero__arrow:hover { background: var(--social-hero-accent); color: #fff; }
-.social-hero__arrow:focus-visible { outline: 2px solid var(--social-hero-accent); outline-offset: 2px; }
-.social-hero__arrow--prev { left: 12px; }
-.social-hero__arrow--next { right: 12px; }
-@media (max-width: 640px) {
-  .social-hero__slide { padding: 14px 14px 56px; min-height: 280px; }
-  .social-hero__arrow { top: auto; bottom: 10px; transform: none; }
-  .social-hero__arrow--prev { left: 12px; }
-  .social-hero__arrow--next { left: 60px; right: auto; }
-  .social-hero__controls { left: 112px; right: 12px; justify-content: flex-end; }
-}

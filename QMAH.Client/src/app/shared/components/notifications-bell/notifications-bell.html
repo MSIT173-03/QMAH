@@ -19,28 +19,27 @@
           <li>
             @if (notification.targetUrl) {
               <a class="qmah-bell-item" [class.is-unread]="!notification.isRead" [routerLink]="notification.targetUrl" (click)="markRead(notification)">
-                <span class="qmah-bell-item__dot" aria-hidden="true"></span>
+                <span class="qmah-bell-item__icon" aria-hidden="true"><app-qmah-icon name="bell" size="16" /></span>
                 <span class="qmah-bell-item__main">
-                  <span class="qmah-bell-item__title">{{ notification.title }}</span>
+                  <span class="qmah-bell-item__top"><span class="qmah-bell-item__title">{{ notification.title }}</span><time class="qmah-bell-item__time">{{ notification.createdAt | date: 'MM/dd HH:mm' }}</time></span>
                   <span class="qmah-bell-item__text">{{ notification.content }}</span>
-                  <time class="qmah-bell-item__time">{{ notification.createdAt | date: 'MM/dd HH:mm' }}</time>
                 </span>
               </a>
             } @else {
               <button type="button" class="qmah-bell-item" [class.is-unread]="!notification.isRead" (click)="markRead(notification)">
-                <span class="qmah-bell-item__dot" aria-hidden="true"></span>
+                <span class="qmah-bell-item__icon" aria-hidden="true"><app-qmah-icon name="bell" size="16" /></span>
                 <span class="qmah-bell-item__main">
-                  <span class="qmah-bell-item__title">{{ notification.title }}</span>
+                  <span class="qmah-bell-item__top"><span class="qmah-bell-item__title">{{ notification.title }}</span><time class="qmah-bell-item__time">{{ notification.createdAt | date: 'MM/dd HH:mm' }}</time></span>
                   <span class="qmah-bell-item__text">{{ notification.content }}</span>
-                  <time class="qmah-bell-item__time">{{ notification.createdAt | date: 'MM/dd HH:mm' }}</time>
                 </span>
               </button>
             }
           </li>
         } @empty {
-          <li class="qmah-bell-empty">目前沒有通知</li>
+          <li class="qmah-bell-empty"><app-qmah-icon name="bell" size="22" aria-hidden="true" /><span>目前沒有通知</span></li>
         }
       </ul>
+      <a class="qmah-bell-panel__foot" routerLink="/member/notifications">查看全部通知 →</a>
     </div>
   </div>
 }

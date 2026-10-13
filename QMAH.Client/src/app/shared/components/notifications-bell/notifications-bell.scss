@@ -57,3 +57,28 @@ button.btn-circle { display: inline-grid; place-items: center; }
 :host-context([data-theme='qmahdark']) .qmah-bell-item__text { color: #cfcbc2; }
 :host-context([data-theme='qmahdark']) .qmah-bell-item__time { color: #a9a59b; }
 :host-context([data-theme='qmahdark']) .qmah-bell-panel__count { color: #f0b0aa; }
+
+/* ===== 通知面板重新設計：圓角卡片列、左側圖示泡泡（未讀＝紅色）、標題與時間同列、底部固定「查看全部」 ===== */
+.qmah-bell-panel { width: min(380px, calc(100vw - 16px)); display: flex; flex-direction: column; overflow: hidden; border-radius: 16px; max-height: min(72vh, 520px); }
+.qmah-bell-panel__head { padding: 14px 16px 10px; border-bottom: 0; font-size: 1.0625rem; }
+.qmah-bell-panel__all { display: none; }
+.qmah-bell-list { flex: 1; min-height: 0; overflow-y: auto; padding: 0 8px 8px; overscroll-behavior: contain; scrollbar-width: thin; }
+.qmah-bell-list li + li { border-top: 0; margin-top: 4px; }
+.qmah-bell-item { align-items: flex-start; padding: 10px; border-radius: 12px; }
+.qmah-bell-item.is-unread { background: color-mix(in srgb, #c5493f 7%, transparent); }
+.qmah-bell-item__icon { flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: color-mix(in srgb, var(--qmah-ink) 8%, transparent); color: var(--qmah-muted); }
+.qmah-bell-item.is-unread .qmah-bell-item__icon { background: #c5493f; color: #fff; }
+.qmah-bell-item__main { flex: 1; }
+.qmah-bell-item__top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.qmah-bell-item__time { flex: none; }
+.qmah-bell-empty { display: grid; justify-items: center; gap: 8px; padding: 32px 16px; }
+.qmah-bell-panel__foot { display: block; padding: 12px; border-top: 1px solid var(--qmah-border); text-align: center; color: var(--qmah-primary); font-size: 0.875rem; font-weight: 700; text-decoration: none; }
+.qmah-bell-panel__foot:hover { background: color-mix(in srgb, var(--qmah-ink) 5%, transparent); }
+
+/* 通知面板同樣展開在頁首下緣之外 */
+.dropdown .dropdown-content {
+  inset: calc(100% + (var(--app-header-height, 72px) - var(--qmah-control-height, 44px)) / 2 + 6px) 0 auto auto;
+}
+
+/* 收合時完全不可互動：面板現在位於頁首下緣之外，不能蓋住下方「點數／折價券」等連結而吃掉點擊與 hover */
+.dropdown:not(:focus-within) .dropdown-content { pointer-events: none; visibility: hidden; }

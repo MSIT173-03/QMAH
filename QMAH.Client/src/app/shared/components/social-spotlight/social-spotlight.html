@@ -57,7 +57,6 @@
                   <p class="social-hero__meta"><span class="social-hero__tag">{{ boardLabel(announcement.boardCode) }}</span><time [attr.datetime]="announcement.createdAt">{{ announcement.createdAt | date: 'yyyy/MM/dd' }}</time></p>
                   <h2 class="social-hero__title">{{ announcement.title }}</h2>
                   <p class="social-hero__desc">{{ stripMarkup(announcement.contentPreview) }}</p>
-                  <span class="social-hero__cta" aria-hidden="true">閱讀全文</span>
                 </div>
               </a>
             }
@@ -79,6 +78,7 @@
                   ></button>
                 }
               </div>
+              <span class="social-hero__count" aria-hidden="true">{{ currentAnnouncementIndex + 1 }} / {{ announcements.length }}</span>
               <button
                 type="button"
                 class="social-hero__play-toggle" [attr.aria-label]="announcementAutoplayEnabled() ? '暫停輪播' : '播放輪播'" [title]="announcementAutoplayEnabled() ? '暫停輪播' : '播放輪播'"
@@ -86,8 +86,7 @@
                 [attr.aria-pressed]="!announcementAutoplayEnabled()"
                 (click)="toggleAnnouncementAutoplay()"
               >
-                <app-qmah-icon [name]="announcementAutoplayEnabled() ? 'pause' : 'play'" [size]="12" aria-hidden="true" />
-                {{ currentAnnouncementIndex + 1 }} / {{ announcements.length }}
+                <app-qmah-icon [name]="announcementAutoplayEnabled() ? 'pause' : 'play'" [size]="13" aria-hidden="true" />
               </button>
             </div>
           }
