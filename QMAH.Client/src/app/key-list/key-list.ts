@@ -29,7 +29,7 @@ import { LucideCircleCheckBig, LucideLibrary } from '@lucide/angular';
   templateUrl: './key-list.html',
   // 書本模式（圖鑑書裡的鑰匙背包）樣式另外放一個檔案，避免單一樣式檔超過 32kB 預算
   // key-list.actions.scss：點開鑰匙的兌換／使用選單與兌換點數視窗；book 要放最後才能覆寫前兩者
-  styleUrls: ['./key-list.scss', './key-list.actions.scss', './key-list.book.scss'],
+  styleUrls: ['./key-list.scss', './key-list.actions.scss', './key-list.member.scss', './key-list.book.scss'],
 })
 export class KeyList implements OnInit, OnDestroy {
   /**

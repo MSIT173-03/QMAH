@@ -131,16 +131,16 @@
   @if (pageReady.showLoader()) { <app-page-loader /> }
   <main #pageContent id="main-content" class="app-main" [class.app-main--preparing]="pageReady.loading()" [attr.aria-busy]="pageReady.loading()" [attr.inert]="pageReady.loading() ? '' : null">
     <router-outlet></router-outlet>
+    <!-- Inherit the active area's primary colors from the content scope. -->
+    @if (showFixedScrollTop()) {
+      <app-scroll-top [fixed]="true" />
+    } @else if (activeArea() !== 'store' && !gameFocus.active() && !menuOpen()) {
+      <app-scroll-top [fixed]="true" [mobileOnly]="true" [minimumScroll]="320" />
+    }
   </main>
   </div>
 
   <!-- ui-integration: 所有 App Shell route 共用同一個 footer，首頁與深層頁都保留合理的回站入口。 -->
-  @if (showFixedScrollTop()) {
-    <app-scroll-top [fixed]="true" />
-  } @else if (activeArea() !== 'store' && !gameFocus.active() && !menuOpen()) {
-    <app-scroll-top [fixed]="true" [mobileOnly]="true" [minimumScroll]="320" />
-  }
-
   <app-site-footer />
 </div>
 

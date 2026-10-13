@@ -3,6 +3,9 @@
   class="key-page"
   [class.key-page--embedded]="embedded"
   [class.key-page--book]="bookMode"
+  [class.key-page--member]="!bookMode && !embedded"
+  [class.key-page--member-ready]="!bookMode && !embedded && craftReadyRule()"
+  [attr.data-member-craft-phase]="!bookMode && !embedded ? craftPhase() : null"
   #pageRoot
   (scroll)="onViewportChange()"
 >
@@ -120,6 +123,11 @@
       <ng-container *ngFor="let key of filteredKeys(); trackBy: trackByKeyId">
         <ng-container *ngTemplateOutlet="keySlotTpl; context: { $implicit: key }"></ng-container>
       </ng-container>
+      @if (!embedded && !bookMode && selectedFilter() === 'ALL') {
+        @for (empty of [0, 1, 2, 3]; track empty) {
+          <div class="member-empty-slot" aria-hidden="true"></div>
+        }
+      }
     </div>
     </ng-container>
     <ng-template #noFilteredKeys>

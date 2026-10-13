@@ -12,6 +12,7 @@ using QMAH.Infrastructure.Models.Entities;
 using QMAH.Infrastructure.Services.Economy;
 
 await MemberDeletionChecks.RunAsync();
+MiniGameEligibilityChecks.Run();
 
 // Inject a transient failure after the balance and ledger have been changed in
 // memory. Each retry must reread persisted state, not spend the same keys twice.

@@ -80,7 +80,7 @@ import { CategoryModel, EraModel } from '../models/catalog-model';
       @if (stuck()) {
         <div class="jump-dock">
           <button type="button" class="jump-btn jump-filter" (click)="openSheet()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10" /><circle cx="16" cy="7" r="2" /><circle cx="8" cy="17" r="2" /></svg>篩選@if (hasFilters) { <i class="jump-badge" aria-label="已套用篩選"></i> }</button>
-          <button type="button" class="jump-btn jump-top" data-button-tone="neutral" (click)="toTop()" aria-label="回到頂部"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 14 6-6 6 6M12 8v11" /></svg><span>回到頂部</span></button>
+          <button type="button" class="jump-btn jump-top" (click)="toTop()" aria-label="回到頂部"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 14 6-6 6 6M12 8v11" /></svg><span>回到頂部</span></button>
         </div>
       }
       <app-game-appreciation-confirm [pending]="pendingVote()" (confirmed)="vote($event)" />

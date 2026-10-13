@@ -352,6 +352,16 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
             ? MiniGameCompletionReward.Apply(grade, pointReward, keyProgressReward)
             : (0, 0);
 
+        if (meaningfulPlay)
+        {
+            var lastRewardAt = await db.MiniGameAttempts
+                .Where(item => item.UserId == userId && item.Status == "COMPLETED" && item.RewardGranted)
+                .MaxAsync(item => item.CompletedAt, cancellationToken);
+            var remaining = RemainingRewardCooldownSeconds(lastRewardAt, DateTime.UtcNow);
+            if (remaining > 0)
+                return EconomyResult<MiniGameCompleteView>.Conflict($"領獎過於頻繁，請等 {remaining} 秒後再次送出。本局進度會保留。");
+        }
+
         var setting = await economyService.GetGameEconomySettingAsync(cancellationToken);
         if (setting.DailyMiniGameRewardLimit < 0 || setting.KeyProgressToNormalKey <= 0)
             return EconomyResult<MiniGameCompleteView>.Conflict("Mini Game 每日獎勵或進度門檻設定無效。");
@@ -708,15 +718,18 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
     }
 
     /// <summary>
-    /// 有沒有實際遊玩：沒用協助的對局，要有一定操作量或遊玩時間；用了協助的對局，要自己完成至少一半，
-    /// 或已經掙扎很久（時間與操作量都夠多）才算，避免亂點幾下就請系統代完成領獎。
+    /// 沒用協助的對局保留原操作／時間要求；代完成可在自己完成四分之一，
+    /// 或至少完成一個部分並短暫實際遊玩後計入獎勵。完全代完成仍不計獎勵。
     /// </summary>
     private const int MinEngagedSeconds = 20;
     private const int MinEngagedMoves = 3;
-    private const double MinAssistedOwnRatio = 0.5;
-    private const int StruggleSeconds = 180;
-    private const int StruggleMoves = 10;
-    private const int LocatorStruggleSeconds = 120;
+    private const double MinAssistedOwnRatio = 0.25;
+    private const int StruggleSeconds = 20;
+    private const int StruggleMoves = 3;
+    private const int RewardCooldownSeconds = 20;
+
+    private static int RemainingRewardCooldownSeconds(DateTime? lastRewardAt, DateTime now)
+        => lastRewardAt is null ? 0 : Math.Max(0, (int)Math.Ceiling(RewardCooldownSeconds - (now - lastRewardAt.Value).TotalSeconds));
 
     private static bool HasMeaningfulPlay(MiniGameAttempt attempt, GameModeDefinition mode, JsonElement result)
     {
@@ -737,9 +750,7 @@ public sealed class MiniGameService(QmahDbContext db, EconomyService economyServ
         if (assisted <= 0)
             return isLocator || moves >= MinEngagedMoves || seconds >= MinEngagedSeconds;
         if (ownUnits >= Math.Ceiling(units * MinAssistedOwnRatio)) return true;
-        return isLocator
-            ? seconds >= LocatorStruggleSeconds
-            : seconds >= StruggleSeconds && moves >= StruggleMoves;
+        return seconds >= StruggleSeconds || moves >= StruggleMoves;
     }
 
     private static bool TryGetInt(JsonElement element, string propertyName, out int value)

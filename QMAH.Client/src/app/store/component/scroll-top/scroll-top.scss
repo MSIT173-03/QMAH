@@ -41,18 +41,17 @@
   height: 44px;
   min-height: 0;
   padding: 0;
-  border: 1px solid var(--color-accent);
+  border: 1px solid var(--color-primary, var(--qmah-primary));
   border-radius: 50%;
-  background: var(--color-accent);
-  color: var(--color-on-accent);
+  background: var(--color-primary, var(--qmah-primary));
+  color: var(--color-primary-content, var(--qmah-primary-content));
   box-shadow: var(--qmah-shadow-float);
   cursor: pointer;
   animation: scroll-top-in 200ms ease both;
   transition: background 160ms, border-color 160ms;
 
   &:hover {
-    border-color: var(--qmah-primary);
-    background: var(--qmah-primary);
+    filter: brightness(1.08);
   }
 
   &:focus-visible {
@@ -84,9 +83,6 @@
   position: fixed;
   right: max(16px, calc((100vw - 1320px) / 2 + 8px));
   bottom: 24px;
-  border-color: var(--qmah-social-action, var(--color-accent));
-  background: var(--qmah-social-action, var(--color-accent));
-  color: #fff;
 }
 
 .scroll-top--mobile-only { display: none; }

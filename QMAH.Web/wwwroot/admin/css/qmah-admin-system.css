@@ -184,10 +184,10 @@ html[data-bs-theme="dark"] .qmah-admin {
   width: 2.75rem;
   height: 2.75rem;
   place-items: center;
-  border: 1px solid var(--qmah-line);
+  border: 1px solid var(--qmah-area-accent);
   border-radius: 50%;
-  background: var(--qmah-surface-raised);
-  color: var(--qmah-ink-soft);
+  background: var(--qmah-area-soft);
+  color: var(--qmah-area-accent);
   box-shadow: var(--qmah-shadow-sm);
   opacity: .96;
   transition:

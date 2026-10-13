@@ -21,6 +21,7 @@ export class MobilePageTools {
   readonly open = signal(false);
   readonly sections = signal<PageToolTarget[]>([]);
   readonly hasNavigation = signal(false);
+  readonly topColors = signal({ background: '', text: '' });
   private readonly router = inject(Router);
   private readonly path = signal(this.router.url);
   readonly useful = computed(() => !/^\/(game|artifact-list|key-list)(\/|\?|$)/.test(this.path()));
@@ -42,6 +43,12 @@ export class MobilePageTools {
 
   toggle(): void {
     if (this.open()) return this.close();
+    const scope = this.document.querySelector('.app-main') ?? this.document.documentElement;
+    const colors = this.document.defaultView?.getComputedStyle(scope);
+    this.topColors.set({
+      background: colors?.getPropertyValue('--color-primary').trim() || colors?.getPropertyValue('--qmah-primary').trim() || '',
+      text: colors?.getPropertyValue('--color-primary-content').trim() || colors?.getPropertyValue('--qmah-primary-content').trim() || '',
+    });
     const candidates: PageToolTarget[] = [
       { selector: '#social-boards', label: '切換看板' },
       { selector: '#social-post-search', label: '搜尋與篩選' },
