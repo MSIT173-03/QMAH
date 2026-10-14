@@ -304,6 +304,14 @@
   animation: iris-glow 4s ease-in-out infinite;
 }
 
+/* 封面攤到背面後已完全隱藏：保留 SVG／濾鏡與資源，只暫停看不到的動畫。
+   closing 一開始便恢復，利用原有 140ms 延遲提前繪製；可見時的速度與光暈不變。 */
+.artifact-page[data-book='open'] .cover__emblem-ring,
+.artifact-page[data-book='open'] .cover__runes,
+.artifact-page[data-book='open'] .cover__iris {
+  animation-play-state: paused;
+}
+
 .cover__pupil { fill: #120904; }
 .cover__glint { fill: #fff6dc; }
 

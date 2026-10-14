@@ -377,6 +377,7 @@
         [attr.inert]="bookState() === 'closed' ? null : ''"
         (click)="openBook()"
         (keydown)="onCoverKeydown($event)"
+        (transitionend)="onCoverTransitionEnd($event)"
       >
         <div class="cover__front">
           <span class="cover__spine" aria-hidden="true"></span>

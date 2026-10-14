@@ -311,6 +311,7 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
 
   /** closed：只看到封面；opening／closing：翻頁動畫中；open：書本攤開 */
   bookState = signal<BookState>('closed');
+  private closingSequence = 0;
   /** 書本上方頁籤：圖鑑／鑰匙背包 */
   bookSection = signal<BookSection>('catalog');
   /**
@@ -799,21 +800,33 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
   /** 闔上書本；完全闔上後切回「圖鑑」章節並收合展開中的年代，下次翻開從圖鑑開始 */
   closeBook(): void {
     if (this.bookState() !== 'open') return;
+    const sequence = ++this.closingSequence;
     if (this.isFullscreen()) void this.toggleFullscreen();
     this.revealSeq++;
     this.reveal.set('done');
-    const finish = () => {
-      this.bookState.set('closed');
-      this.setSection('catalog');
-      this.expandedGroupKey.set(null);
-      this.spread.set(0);
-    };
     if (this.prefersReducedMotion()) {
-      finish();
+      this.finishClosingBook();
       return;
     }
     this.bookState.set('closing');
-    this.later(800, finish);
+    // 封面有 140ms 延遲；不能在 800ms 時提早換尺寸／重設內容。
+    // 正常由實際 transitionend 完成；背景分頁或轉場遭取消時仍可恢復操作。
+    this.later(1100, () => {
+      if (sequence === this.closingSequence && this.bookState() === 'closing') this.finishClosingBook();
+    });
+  }
+
+  onCoverTransitionEnd(event: TransitionEvent): void {
+    if (event.target === event.currentTarget && event.propertyName === 'transform'
+      && this.bookState() === 'closing') this.finishClosingBook();
+  }
+
+  private finishClosingBook(): void {
+    this.closingSequence++;
+    this.bookState.set('closed');
+    this.setSection('catalog');
+    this.expandedGroupKey.set(null);
+    this.spread.set(0);
   }
 
   onCoverKeydown(event: KeyboardEvent): void {

@@ -143,11 +143,11 @@
   .book-stage--mobile-single .mobile-page-controls .seal-btn { min-width:0;width:100%;padding-inline:6px;gap:4px;font-size:clamp(10px,3.2vw,12px);letter-spacing:0; }
   .book-stage--mobile-single .mobile-page-controls .seal-btn strong { font-size:inherit; }
   .book-stage--mobile-single .mobile-page-controls .seal-btn app-qmah-icon { flex:none;width:14px;height:14px; }
-  /* 真正掛在書本上緣的索引書籤；五枚在 320px 手機仍保留 44px 觸控寬度。 */
+  /* 書籤在書板之上、紙頁之下：尾端由真正的紙頁遮住，露出區仍可觸控。 */
   .book-stage--mobile-single .mobile-bookmarks {
     position:absolute;
-    z-index:7;
-    top:-30px;
+    z-index:2;
+    top:-48px;
     left:24px;
     right:16px;
     max-width:360px;
@@ -168,7 +168,7 @@
     flex:1 1 0;
     min-width:44px;
     max-width:68px;
-    height:48px;
+    height:60px;
     padding:6px 4px 14px;
     border-radius:12px 12px 0 0;
     font-size:clamp(11px,3.3vw,13px);
@@ -179,7 +179,7 @@
     touch-action:manipulation;
   }
   .book-stage--mobile-single .mobile-bookmark:hover { transform:translateY(1px); }
-  .book-stage--mobile-single .mobile-bookmark.is-active { height:58px;transform:translateY(0); }
+  .book-stage--mobile-single .mobile-bookmark.is-active { height:68px;transform:translateY(-4px); }
   .book-stage--mobile-single .mobile-bookmark::after {
     content:'';
     position:absolute;
