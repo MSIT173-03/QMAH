@@ -85,16 +85,20 @@ button.btn-circle { display: inline-grid; place-items: center; }
 
 .dropdown.is-open .dropdown-content { visibility: visible; opacity: 1; pointer-events: auto; transform: none; }
 
-/* 手機：鈴噹不在畫面最右側，面板靠鈴噹右緣對齊會被推出螢幕左側而看不到；
-   改為貼齊頁首下緣、左右各留 8px 的固定面板（頁首的 backdrop-filter 讓 fixed 以頁首為基準，頁首永遠在頂端）。 */
+/* 電腦與手機共用：面板固定貼在頁首下緣（頁首的 backdrop-filter 讓 fixed 以頁首為基準，頁首永遠在頂端），
+   靠右留 8px，寬度不超過螢幕，因此不論鈴噹在頁首哪個位置都完整看得到。 */
+.dropdown .dropdown-content {
+  position: fixed;
+  inset: var(--app-header-height, 72px) 8px auto auto;
+  max-width: calc(100vw - 16px);
+  margin: 0;
+  z-index: 70;
+}
 @media (max-width: 1040px) {
   .dropdown .dropdown-content {
-    position: fixed;
     inset: var(--app-header-height, 64px) 8px auto 8px;
     width: auto;
     max-width: none;
     max-height: min(72dvh, 520px);
-    margin: 0;
-    z-index: 70;
   }
 }
