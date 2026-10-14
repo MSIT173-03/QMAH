@@ -601,6 +601,40 @@
   }
 }
 
+/* 手機書頁窄，標題與持有數量並排會把「我的鑰匙」拆成兩行。 */
+@media (max-width: 500px) {
+  .key-page--book .section-title {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: center;
+    gap: 2px;
+  }
+
+  .key-page--book .section-title h2 {
+    font-size: 16px;
+    letter-spacing: 0.08em;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .key-page--book .section-title__tools {
+    justify-self: end;
+    flex-wrap: nowrap;
+  }
+
+  .key-page--book .key-count,
+  .key-page--book .key-count strong,
+  .key-page--book .key-count > span {
+    white-space: nowrap;
+  }
+
+  .key-page--book .key-count {
+    gap: 5px;
+    padding: 2px 8px;
+    font-size: 12px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .craft-magic__outer,
   .craft-magic__inner {
