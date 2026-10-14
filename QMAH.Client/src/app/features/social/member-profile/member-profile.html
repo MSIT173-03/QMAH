@@ -31,7 +31,7 @@
             @if (profile.isPublic && profile.email) { <li><a class="social-author-link" [href]="'mailto:' + profile.email">{{ profile.email }}</a></li> }
           </ul>
         </div>
-        @if (!isSelf) { <a class="btn btn-primary mp-hero__cta" href="#mp-message"><svg lucideMessageCircle aria-hidden="true" focusable="false"></svg>留言給 TA</a> }
+        @if (!isSelf) { <a class="btn btn-primary mp-hero__cta" href="#mp-message"><svg lucideMessageCircle aria-hidden="true" focusable="false"></svg>留言給對方</a> }
       </div>
     </section>
 

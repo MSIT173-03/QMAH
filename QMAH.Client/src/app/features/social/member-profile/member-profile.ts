@@ -16,7 +16,7 @@ import { stripSocialMarkup } from '../../../shared/social-markup';
 const MESSAGE_MAX = 300;
 
 // 公開個人頁：頭像／簡介／加入時間只有對方設為公開才會有，貼文與活動則一律列出最近幾筆。
-// 「留言給 TA」不另開私訊表，送進對方的通知中心，對方點通知會回到留言者的個人頁。
+// 留言給對方會送進對方的通知中心，對方點通知可回到留言者的個人頁。
 @Component({
   selector: 'app-member-profile',
   standalone: true,
