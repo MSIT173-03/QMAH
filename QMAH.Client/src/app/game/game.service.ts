@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
-import { finalize, map, shareReplay, switchMap, tap } from 'rxjs/operators';
+import { finalize, map, shareReplay, switchMap, tap, timeout } from 'rxjs/operators';
 
 import { environment } from '../../environments/environment';
 import {
@@ -232,7 +232,7 @@ export class GameService {
     return this.mutate(() => this.http.post<void>(
       `${this.apiUrl}/rooms/${encodeURIComponent(roomId)}/heartbeat`,
       null
-    ));
+    )).pipe(timeout({ first: 10_000 }));
   }
 
   /** 讀取回合詳細資料並更新目前回合快照。 */

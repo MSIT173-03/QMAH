@@ -53,6 +53,9 @@ export class EventsComponent implements OnInit, OnDestroy {
   private readonly toast = inject(ToastService);
   private readonly socialLive = inject(SocialLive);
   private eventsRequest?: Subscription;
+  eventsLoading = false;
+  private pendingLiveRefresh = false;
+  private eventsEpoch = 0;
   private liveSubscription?: Subscription;
   creating = false;
 
@@ -109,11 +112,16 @@ export class EventsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.liveSubscription = this.socialLive.changes.subscribe(() => this.loadEvents());
+    this.liveSubscription = this.socialLive.changes.subscribe(() => {
+      if (this.eventsLoading) this.pendingLiveRefresh = true;
+      else this.loadEvents(true);
+    });
     this.loadEvents();
   }
 
   ngOnDestroy(): void {
+    this.eventsEpoch++;
+    this.pendingLiveRefresh = false;
     this.liveSubscription?.unsubscribe();
     this.eventsRequest?.unsubscribe();
   }
@@ -138,16 +146,27 @@ export class EventsComponent implements OnInit, OnDestroy {
   }
 
   // GET /api/v1/social/events（AllowAnonymous，只回傳審核通過且已發布的活動）
-  loadEvents(): void {
-    this.loadError = null;
+  loadEvents(background = false): void {
+    const epoch = ++this.eventsEpoch;
+    if (!background) this.loadError = null;
     this.eventsRequest?.unsubscribe();
+    this.eventsLoading = true;
     this.eventsRequest = this.socialApi.getEvents({
       pageSize: 20,
       q: this.filterKeyword || undefined,
       startAfter: this.filterStartAfter || undefined,
       startBefore: this.filterStartBefore || undefined
-    }).subscribe({
+    }).pipe(finalize(() => {
+      if (epoch !== this.eventsEpoch) return;
+      this.eventsLoading = false;
+      this.cdr.detectChanges();
+      if (this.pendingLiveRefresh) {
+        this.pendingLiveRefresh = false;
+        queueMicrotask(() => { if (epoch === this.eventsEpoch) this.loadEvents(true); });
+      }
+    })).subscribe({
       next: (page) => {
+        this.loadError = null;
         this.events = page.items;
         this.totalCount = page.totalCount;
         this.cdr.detectChanges();

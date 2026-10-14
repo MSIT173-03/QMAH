@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -uo pipefail
 run_dir="${QMAH_RUN_DIR:-/run}"
+# Wait-free reader lock: an active deployment owns this lock exclusively.
+# This also lets deployment wait for a health check that is already running.
+exec 8>"${QMAH_UPDATE_LOCK:-/var/lock/qmah-update.lock}" || exit 1
+flock -s -n 8 || exit 0
 state="$run_dir/qmah-health"
 mkdir -p "$state" || exit 1
 exec 9>"$run_dir/qmah-health.lock"

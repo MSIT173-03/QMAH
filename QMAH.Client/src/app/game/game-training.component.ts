@@ -6,7 +6,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MeApiService } from '../core/services/me-api';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { catchError, finalize, forkJoin, interval, of, Subscription } from 'rxjs';
+import { catchError, finalize, forkJoin, interval, map, of, Subscription } from 'rxjs';
 
 import {
   MiniGameArtifact,
@@ -293,9 +293,24 @@ export class GameTrainingComponent implements OnInit, OnDestroy {
   private attemptStartedAt = 0;
 
   ngOnInit(): void {
-    this.meApi.getMe().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: me => { this.ownerId = me.id; this.restoreSessionState(); this.loadModes(); },
-      error: () => this.loadModes()
+    // 會員資料與玩法獨立讀取，仍等身分確認後才恢復該會員的存檔。
+    forkJoin({
+      me: this.meApi.getMe().pipe(catchError(() => of(null))),
+      modes: this.game.getMiniGameModes().pipe(
+        map(items => ({ items, error: null as unknown })),
+        catchError(error => of({ items: [] as MiniGameMode[], error })),
+      ),
+    }).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => { this.loading = false; this.changeDetector.markForCheck(); }),
+    ).subscribe({
+      next: ({ me, modes }) => {
+        this.modes = modes.items;
+        if (me) { this.ownerId = me.id; this.restoreSessionState(); }
+        if (modes.error) this.setError(modes.error);
+        this.changeDetector.markForCheck();
+      },
+      error: error => { this.setError(error); this.changeDetector.markForCheck(); },
     });
     let lastTick = Date.now();
     this.elapsedTimer = interval(1000).subscribe(() => {

@@ -29,7 +29,7 @@
 </div>
 
 @if (loadError) {
-  <div class="alert alert-error mb-4" role="alert">{{ loadError }}</div>
+  <div class="alert alert-error mb-4" role="alert"><span>{{ loadError }}</span><button type="button" class="btn btn-outline" (click)="loadEvents()" [disabled]="eventsLoading">重新載入</button></div>
 }
 
 <div class="social-event-wall" [style.--event-cols]="eventCols">
@@ -96,7 +96,11 @@
       </div>
     </article>
   } @empty {
-    <div class="social-state social-state--wide">目前還沒有公開活動</div>
+    @if (eventsLoading && !loadError) {
+      <div class="social-state social-state--wide" role="status">正在讀取活動…</div>
+    } @else if (!loadError) {
+      <div class="social-state social-state--wide">目前還沒有公開活動</div>
+    }
   }
 </div>
 </app-social-shell>

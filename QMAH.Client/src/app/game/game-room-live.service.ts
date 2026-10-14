@@ -1,65 +1,70 @@
-import { Injectable } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-
 import type { HubConnection } from '@microsoft/signalr';
 
-/**
- * 牌桌即時通知（SignalR）。
- * 原理：伺服器只推一則「這桌有變」的訊號，不帶任何遊戲資料；
- * 收到後畫面仍用既有 HTTP API 重新讀取，所以作者、票數的匿名規則完全不變。
- * 好處：人再多也只是一則小訊號；斷線時外層會退回輪詢，不會卡住。
- */
+/** 只推房間變更提示，遊戲資料與匿名規則仍由 HTTP API 決定。 */
 @Injectable({ providedIn: 'root' })
 export class GameRoomLive {
-  /**
-   * 訂閱一桌的變動訊號：連線成功、斷線重連、以及每次伺服器通知都會發出一次。
-   * 取消訂閱即離開房間並關閉連線。onState 回報目前是否連線中。
-   */
+  private readonly document = inject(DOCUMENT);
+
   watch(roomId: string, onState: (connected: boolean) => void): Observable<void> {
     return new Observable<void>(subscriber => {
       let hub: HubConnection | undefined;
       let closed = false;
+      let starting = false;
       let retry: ReturnType<typeof setTimeout> | undefined;
-
-      const connect = async (): Promise<void> => {
+      const state = (connected: boolean) => { if (!closed) onState(connected); };
+      const schedule = () => {
+        if (!closed && !retry) retry = setTimeout(() => { retry = undefined; void connect(); }, 15000);
+      };
+      const join = async () => {
         if (!hub || closed) return;
+        await hub.invoke('JoinRoom', roomId);
+        if (!closed) { state(true); subscriber.next(); }
+      };
+      const connect = async (): Promise<void> => {
+        if (closed || starting) return;
+        starting = true;
         try {
-          await hub.start();
-          await hub.invoke('JoinRoom', roomId);
-          onState(true);
-          subscriber.next();
+          if (!hub) {
+            // 動態載入失敗也會進入重試，不留下未處理的 Promise。
+            const { HubConnectionBuilder, LogLevel } = await import('@microsoft/signalr');
+            if (closed) return;
+            hub = new HubConnectionBuilder().withUrl('/hubs/game-room')
+              .withAutomaticReconnect([0, 1000, 3000, 5000, 10000, 20000])
+              .configureLogging(LogLevel.None).build();
+            hub.on('RoomChanged', () => subscriber.next());
+            hub.onreconnecting(() => state(false));
+            hub.onreconnected(() => { void connect(); });
+            hub.onclose(() => { state(false); schedule(); });
+          }
+          // JoinRoom 失敗時連線可能仍然有效，只重試加入房間。
+          if (hub.state === 'Disconnected') await hub.start();
+          if (closed) { await hub.stop(); return; }
+          if (hub.state === 'Connected') await join();
         } catch {
-          onState(false);
-          if (!closed) retry = setTimeout(() => void connect(), 15000);
+          state(false);
+          schedule();
+        } finally { starting = false; }
+      };
+      const refresh = () => {
+        if (closed || this.document.visibilityState === 'hidden') return;
+        subscriber.next();
+        if (!hub || hub.state === 'Disconnected' || hub.state === 'Connected') {
+          if (retry) { clearTimeout(retry); retry = undefined; }
+          void connect();
         }
       };
-
-      // SignalR 約 150 kB，動態載入，只有進牌桌才會下載。
-      void import('@microsoft/signalr').then(({ HubConnectionBuilder, LogLevel }) => {
-        if (closed) return;
-        hub = new HubConnectionBuilder()
-          .withUrl('/hubs/game-room')
-          // 短暫斷線自動重連（0、1、3、5、10、20 秒）；全部失敗才算關閉，再由下方每 15 秒重試。
-          .withAutomaticReconnect([0, 1000, 3000, 5000, 10000, 20000])
-          .configureLogging(LogLevel.None)
-          .build();
-        hub.on('RoomChanged', () => subscriber.next());
-        hub.onreconnecting(() => onState(false));
-        hub.onreconnected(async () => {
-          // 重連後群組要重新加入，並立刻補讀一次錯過的變動。
-          try { await hub?.invoke('JoinRoom', roomId); onState(true); subscriber.next(); } catch { onState(false); }
-        });
-        hub.onclose(() => {
-          onState(false);
-          if (!closed) retry = setTimeout(() => void connect(), 15000);
-        });
-        void connect();
-      });
-
+      this.document.defaultView?.addEventListener('online', refresh);
+      this.document.addEventListener('visibilitychange', refresh);
+      void connect();
       return () => {
         closed = true;
         if (retry) clearTimeout(retry);
-        void hub?.stop();
+        this.document.defaultView?.removeEventListener('online', refresh);
+        this.document.removeEventListener('visibilitychange', refresh);
+        void hub?.stop().catch(() => undefined);
       };
     });
   }

@@ -6,6 +6,7 @@ import {
   withXsrfConfiguration
 } from '@angular/common/http';
 import { apiReadDeadlineInterceptor } from './core/services/api-read-deadline';
+import { apiQueueFeedbackInterceptor } from './core/services/api-queue-feedback';
 
 import {
   ApplicationConfig,
@@ -91,7 +92,7 @@ export const appConfig: ApplicationConfig = {
     ),
 
     provideHttpClient(
-      withInterceptors([apiCredentialsInterceptor, pageReadinessInterceptor, publicCatalogCacheInterceptor, apiReadDeadlineInterceptor]),
+      withInterceptors([apiCredentialsInterceptor, apiQueueFeedbackInterceptor, pageReadinessInterceptor, publicCatalogCacheInterceptor, apiReadDeadlineInterceptor]),
       withXsrfConfiguration({
         cookieName: 'XSRF-TOKEN-API',
         headerName: 'X-XSRF-TOKEN'

@@ -1,4 +1,5 @@
 import { inject } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import {
   CanActivateFn,
   Router,
@@ -28,7 +29,15 @@ export const authGuard: CanActivateFn = (_route, state: RouterStateSnapshot) => 
 
       map(() => true),
 
-      catchError(() => {
+      catchError((error: unknown) => {
+
+        // 暫時壅塞不等於登入失效；僅沿用本次工作階段已確認的使用者。
+        // 私人資料與寫入仍由伺服器驗證，401/403 絕不沿用舊狀態。
+        if (error instanceof HttpErrorResponse
+          && [0, 408, 429, 500, 502, 503, 504].includes(error.status)
+          && authService.currentUser()) {
+          return of(true);
+        }
 
         authService.clearSession();
 

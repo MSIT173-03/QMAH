@@ -35,6 +35,12 @@ cp /etc/systemd/system/qmah-api.service /etc/systemd/system/qmah-web.service "$r
 # never reached the running VM. Preserve their old versions for rollback.
 cp -a "$root/deploy" "$release/previous/deploy"
 cp /etc/systemd/system/qmah-health.service /etc/systemd/system/qmah-health.timer "$release/previous/"
+application_ready() {
+    # Reading catalog data exercises the database, unlike account capabilities.
+    curl -fsS --max-time 5 --resolve "$QMAH_HOST:443:127.0.0.1" "https://$QMAH_HOST/api/v1/catalog/artifacts?pageSize=1" >/dev/null \
+        && curl -fsS --max-time 5 --resolve "$QMAH_HOST:443:127.0.0.1" "https://$QMAH_HOST/home" >/dev/null \
+        && curl -fsS --max-time 5 --resolve "$QMAH_HOST:443:127.0.0.1" "https://$QMAH_HOST/admin/Account/Login" >/dev/null
+}
 rollback() {
     local status="${1:-1}" recovery_ok=true
     trap - ERR HUP INT TERM
@@ -58,6 +64,12 @@ rollback() {
     systemctl restart qmah-api qmah-web || recovery_ok=false
     systemctl reload caddy || recovery_ok=false
     systemctl start qmah-health.timer || recovery_ok=false
+    local recovered=false
+    for attempt in $(seq 1 30); do
+        if application_ready; then recovered=true; break; fi
+        sleep 2
+    done
+    [[ "$recovered" == true ]] || recovery_ok=false
     if [[ "$recovery_ok" != true ]]; then
         echo 'QMAH_ROLLBACK_FAILED: preserved files remain available for recovery.'
     else
@@ -83,9 +95,7 @@ systemctl restart qmah-api qmah-web
 systemctl reload caddy
 ready=false
 for attempt in $(seq 1 30); do
-    if curl -fsS --max-time 5 --resolve "$QMAH_HOST:443:127.0.0.1" "https://$QMAH_HOST/api/v1/account/capabilities" >/dev/null \
-        && curl -fsS --max-time 5 --resolve "$QMAH_HOST:443:127.0.0.1" "https://$QMAH_HOST/home" >/dev/null \
-        && curl -fsS --max-time 5 --resolve "$QMAH_HOST:443:127.0.0.1" "https://$QMAH_HOST/admin/" >/dev/null; then
+    if application_ready; then
         ready=true
         break
     fi

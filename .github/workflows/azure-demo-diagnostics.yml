@@ -1,0 +1,53 @@
+name: Azure demo read-only diagnostics
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qmah-azure-demo
+  cancel-in-progress: false
+
+jobs:
+  diagnose:
+    if: github.ref == 'refs/heads/deploy/azure-demo'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Validate diagnostic script
+        run: bash -n deploy/azure-demo/diagnose.sh
+      - name: Azure login
+        env:
+          CLIENT_ID: ${{ vars.QMAH_AZURE_CLIENT_ID }}
+          TENANT_ID: ${{ vars.QMAH_AZURE_TENANT_ID }}
+          SUBSCRIPTION_ID: ${{ vars.QMAH_AZURE_SUBSCRIPTION_ID }}
+        run: |
+          token=$(curl -fsS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=api%3A%2F%2FAzureADTokenExchange" | jq -r '.value')
+          echo "::add-mask::$token"
+          az login --service-principal --username "$CLIENT_ID" --tenant "$TENANT_ID" --federated-token "$token" --output none
+          az account set --subscription "$SUBSCRIPTION_ID"
+      - name: Read VM and SQL health
+        run: |
+          payload=$(base64 -w0 deploy/azure-demo/diagnose.sh)
+          printf "printf '%%s' '%s' | base64 -d | bash\n" "$payload" > run-diagnostics.sh
+          invoked=false
+          for attempt in 1 2 3 4 5 6 7 8; do
+            if az vm run-command invoke --resource-group qmah-demo-rg --name qmah-demo-vm --command-id RunShellScript --scripts @run-diagnostics.sh --query 'value[].message' --output tsv > diagnostic-result.txt 2> run-command-error.txt; then
+              invoked=true
+              break
+            fi
+            if ! grep -Eq '\(Conflict\)|execution is in progress' run-command-error.txt; then
+              cat run-command-error.txt
+              exit 1
+            fi
+            sleep 15
+          done
+          if [ "$invoked" != true ]; then cat run-command-error.txt; exit 1; fi
+          cat diagnostic-result.txt
+          grep -q 'QMAH_DIAGNOSTICS_END' diagnostic-result.txt

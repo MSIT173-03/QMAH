@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { ApiPage } from './social-api';
@@ -45,8 +45,11 @@ export class MeApiService {
   // 登入／登出後由呼叫端 refresh()／clear()，導覽列等元件直接讀這個 signal 就會同步更新。
   readonly me = signal<Me | null>(null);
 
+  private sessionRequest?: Subscription;
+
   refresh(): void {
-    this.http.get<Me | null>(`${this.base}/session`).subscribe({
+    this.sessionRequest?.unsubscribe();
+    this.sessionRequest = this.http.get<Me | null>(`${this.base}/session`).subscribe({
       next: (me) => this.me.set(me),
       error: (error: HttpErrorResponse) => {
         // 暫時斷線或伺服器忙碌不代表登出，保留已確認的會員與切換入口。
@@ -56,6 +59,7 @@ export class MeApiService {
   }
 
   clear(): void {
+    this.sessionRequest?.unsubscribe();
     this.me.set(null);
   }
 

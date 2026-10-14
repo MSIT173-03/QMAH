@@ -470,7 +470,7 @@
             <p class="cover__sr">清明鑑定屋 ・ 文物圖鑑</p>
           </div>
 
-          <p class="cover__hint">{{ catalogViewReady() ? '輕觸封面，翻開圖鑑' : '典籍整理中…' }}</p>
+          <p class="cover__hint">{{ errorMsg() || unlockStatusError() ? '暫時無法讀取，翻開後可重新載入' : catalogViewReady() ? '輕觸封面，翻開圖鑑' : '典籍整理中…' }}</p>
           <span class="cover__clasp" aria-hidden="true"></span>
         </div>
         <!-- 夾在封面上的頁籤（背面）：書闔上時從封面的上緣與右緣探出來，翻開時跟著封面一起繞書脊翻到左邊 -->
@@ -619,9 +619,9 @@
     @if (first && loading()) {
       <div class="state"><span class="spinner"></span>翻閱典籍中…</div>
     } @else if (first && errorMsg()) {
-      <div class="state state--error">{{ errorMsg() }}</div>
+      <div class="state state--error" role="alert"><span>{{ errorMsg() }}</span><button type="button" class="seal-btn" (click)="loadArtifacts()">重新載入</button></div>
     } @else if (first && unlockStatusError()) {
-      <div class="state state--error" role="alert">{{ unlockStatusError() }}</div>
+      <div class="state state--error" role="alert"><span>{{ unlockStatusError() }}</span><button type="button" class="seal-btn" (click)="loadArtifacts()">重新載入</button></div>
     } @else if (first && !unlockStatusReady()) {
       <div class="state"><span class="spinner"></span>載入解鎖狀態中…</div>
     } @else if (catalogViewReady() && page) {

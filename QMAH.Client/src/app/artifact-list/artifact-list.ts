@@ -20,7 +20,7 @@ import { CommonModule, DOCUMENT } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, of, switchMap, map, mergeMap, range, toArray } from 'rxjs';
+import { Observable, Subscription, catchError, forkJoin, of, switchMap, map, mergeMap, range, toArray } from 'rxjs';
 import { CatalogService } from '../services/catalog-service';
 import { CatalogModel, CatalogDetailModel, EraModel } from '../models/catalog-model';
 import { ArtifactUnlockRecord, CardEntry, CompendiumSkin, CompendiumCardSummary } from '../models/artifact-unlock-model';
@@ -1061,18 +1061,28 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
 
   // ================= 資料載入 =================
 
+  private catalogRequest?: Subscription;
+  private unlockStatusRequest?: Subscription;
+
   loadArtifacts(): void {
     this.loading.set(true);
     this.errorMsg.set('');
 
-    this.fetchAllPages(1, []).subscribe({
-      next: (models) => {
+    this.catalogRequest?.unsubscribe();
+    this.unlockStatusRequest?.unsubscribe();
+    this.unlockStatusReady.set(false);
+    this.unlockStatusError.set('');
+    // 私人解鎖紀錄與公開分頁清單同時讀取，避免多等一段網路往返。
+    this.catalogRequest = forkJoin({
+      models: this.fetchAllPages(1, []),
+      records: this.catalogService.getMyArtifactUnlocks().pipe(catchError(() => of(null))),
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: ({ models, records }) => {
         this.catalogModel.set(models.map((model) => this.toCardSummary(model)));
         this.totalCount.set(models.length);
         this.loading.set(false);
-        this.unlockStatusReady.set(false);
-        this.unlockStatusError.set('');
-        this.loadUnlockStatus(true);
+        if (records) this.applyUnlockStatus(records, true);
+        else this.unlockStatusError.set('解鎖狀態目前無法載入，請稍後再試。');
       },
       error: (err) => {
         this.errorMsg.set(err.message);
@@ -1081,31 +1091,27 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  /** 文物清單載入完成後，再打 GET /me/catalog/unlocks 補上真實解鎖狀態 */
+  private applyUnlockStatus(records: ArtifactUnlockRecord[], initialLoad = false): void {
+    const dates = new Map(records.map(record => [record.artifactId, record.unlockedAt]));
+    this.catalogModel.update(list => list.map(item => {
+      const unlockedAt = dates.get(item.id);
+      // 也同步已鎖回的文物，不能只將 false 更新為 true。
+      return { ...item, unlocked: unlockedAt !== undefined, unlockedAt: unlockedAt ?? null };
+    }));
+    this.unlockLedger.set(records);
+    this.unlockStatusReady.set(true);
+    if (initialLoad) this.focusFromQueryParamIfAny();
+  }
+
   private loadUnlockStatus(initialLoad = false): void {
     if (initialLoad) this.unlockStatusReady.set(false);
     this.unlockStatusError.set('');
-
-    this.catalogService.getMyArtifactUnlocks().subscribe({
-      next: (records) => {
-        const unlockedAtByArtifactId = new Map(records.map((r) => [r.artifactId, r.unlockedAt]));
-
-        this.catalogModel.update((list) =>
-          list.map((item) => {
-            const unlockedAt = unlockedAtByArtifactId.get(item.id);
-            return unlockedAt !== undefined ? { ...item, unlocked: true, unlockedAt } : item;
-          })
-        );
-
-        this.unlockLedger.set(records);
-        this.unlockStatusReady.set(true);
-        if (initialLoad) this.focusFromQueryParamIfAny();
-      },
-      error: (err) => {
-        this.unlockStatusError.set('解鎖狀態目前無法載入，請稍後再試。');
-        console.error('[ArtifactList] loadUnlockStatus failed', err);
-      },
-    });
+    this.unlockStatusRequest?.unsubscribe();
+    this.unlockStatusRequest = this.catalogService.getMyArtifactUnlocks()
+      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: records => this.applyUnlockStatus(records, initialLoad),
+        error: () => this.unlockStatusError.set('解鎖狀態目前無法載入，請稍後再試。'),
+      });
   }
 
   private focusFromQueryParamIfAny(): void {
@@ -1135,7 +1141,7 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
 
   /** 讀取年代對照表（含起訖年），書頁依年代先後排列；失敗時退回依名稱排序 */
   private loadEraOrder(): void {
-    this.catalogService.getEras().subscribe({
+    this.catalogService.getEras().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (eras: EraModel[]) => {
         // 以內建對照為底，後端有回的年代再覆蓋；endYear 為空代表迄今
         const order = buildFallbackEraOrder();
@@ -1154,7 +1160,7 @@ export class ArtifactList implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private loadKeyBalance(): void {
-    this.keyService.getKeys().subscribe({
+    this.keyService.getKeys().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (allKeys) => this.onKeysChanged(allKeys),
       error: (err) => console.error('[ArtifactList] loadKeyBalance failed', err),
     });
