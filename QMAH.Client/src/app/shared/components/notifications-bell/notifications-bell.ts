@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, DestroyRef, OnDestroy, OnInit, effect, inject } from '@angular/core';
+import { ChangeDetectorRef, ElementRef, Component, DestroyRef, OnDestroy, OnInit, effect, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -20,6 +20,8 @@ export class NotificationsBellComponent implements OnInit, OnDestroy {
   private readonly document = inject(DOCUMENT);
   private readonly changeDetector = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly host = inject(ElementRef<HTMLElement>);
+  open = false;
   notifications: UserNotification[] = [];
   loggedIn = false;
   private seenIds = new Set<string>();
@@ -49,6 +51,10 @@ export class NotificationsBellComponent implements OnInit, OnDestroy {
     this.pending = false;
     if (id !== null) this.load();
   });
+  // 手機瀏覽器（iOS Safari 等）點按鈕不會取得焦點，改用明確的開關狀態，桌機與手機行為一致。
+  private readonly onDocumentPointer = (event: Event) => {
+    if (this.open && !this.host.nativeElement.contains(event.target as Node)) { this.open = false; this.changeDetector.markForCheck(); }
+  };
   private readonly onVisibilityChange = () => {
     if (this.document.visibilityState !== 'hidden') this.load();
   };
@@ -56,9 +62,19 @@ export class NotificationsBellComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.live.changes.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.load());
     this.document.addEventListener('visibilitychange', this.onVisibilityChange);
+    this.document.addEventListener('click', this.onDocumentPointer);
+  }
+  toggle(event: Event): void {
+    event.stopPropagation();
+    this.open = !this.open;
+    if (this.open) this.load();
+  }
+  onPanelClick(event: Event): void {
+    if ((event.target as HTMLElement).closest('a, button')) this.open = false;
   }
   ngOnDestroy(): void {
     this.document.removeEventListener('visibilitychange', this.onVisibilityChange);
+    this.document.removeEventListener('click', this.onDocumentPointer);
   }
   get unreadCount(): number {
     return this.totalUnread;

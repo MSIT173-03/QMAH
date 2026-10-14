@@ -1,6 +1,6 @@
 @if (loggedIn) {
-  <div class="dropdown dropdown-end">
-    <button type="button" class="btn btn-ghost btn-circle" aria-label="開啟通知" aria-haspopup="true" (click)="load()">
+  <div class="dropdown dropdown-end" [class.is-open]="open" (keydown.escape)="open = false">
+    <button type="button" class="btn btn-ghost btn-circle" aria-label="開啟通知" aria-haspopup="true" [attr.aria-expanded]="open" (click)="toggle($event)">
       <div class="indicator">
         <app-qmah-icon name="bell" size="22" />
         @if (unreadCount > 0) {
@@ -8,7 +8,7 @@
         }
       </div>
     </button>
-    <div tabindex="0" class="dropdown-content qmah-bell-panel" role="region" aria-label="通知">
+    <div class="dropdown-content qmah-bell-panel" (click)="onPanelClick($event)" role="region" aria-label="通知">
       <div class="qmah-bell-panel__head">
         <strong>通知</strong>
         @if (unreadCount > 0) { <span class="qmah-bell-panel__count">{{ unreadCount }} 則未讀</span> }

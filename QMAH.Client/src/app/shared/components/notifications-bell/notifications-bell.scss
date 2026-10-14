@@ -81,4 +81,6 @@ button.btn-circle { display: inline-grid; place-items: center; }
 }
 
 /* 收合時完全不可互動：面板現在位於頁首下緣之外，不能蓋住下方「點數／折價券」等連結而吃掉點擊與 hover */
-.dropdown:not(:focus-within) .dropdown-content { pointer-events: none; visibility: hidden; }
+.dropdown:not(.is-open) .dropdown-content { pointer-events: none; visibility: hidden; }
+
+.dropdown.is-open .dropdown-content { visibility: visible; opacity: 1; pointer-events: auto; transform: none; }
