@@ -84,3 +84,17 @@ button.btn-circle { display: inline-grid; place-items: center; }
 .dropdown:not(.is-open) .dropdown-content { pointer-events: none; visibility: hidden; }
 
 .dropdown.is-open .dropdown-content { visibility: visible; opacity: 1; pointer-events: auto; transform: none; }
+
+/* 手機：鈴噹不在畫面最右側，面板靠鈴噹右緣對齊會被推出螢幕左側而看不到；
+   改為貼齊頁首下緣、左右各留 8px 的固定面板（頁首的 backdrop-filter 讓 fixed 以頁首為基準，頁首永遠在頂端）。 */
+@media (max-width: 1040px) {
+  .dropdown .dropdown-content {
+    position: fixed;
+    inset: var(--app-header-height, 64px) 8px auto 8px;
+    width: auto;
+    max-width: none;
+    max-height: min(72dvh, 520px);
+    margin: 0;
+    z-index: 70;
+  }
+}
