@@ -1,4 +1,4 @@
-import { Component, input, model, output } from '@angular/core';
+import { Component, ElementRef, input, model, output, viewChild } from '@angular/core';
 
 /**
  * 搜尋框元件：提供關鍵字輸入與送出搜尋（按 Enter 或搜尋按鈕）。
@@ -21,6 +21,16 @@ export class SearchBar {
   value = model('');
   /** 送出搜尋（按 Enter 或點擊搜尋按鈕）時觸發，帶出去除頭尾空白的關鍵字 */
   search = output<string>();
+
+  private readonly inputRef = viewChild<ElementRef<HTMLInputElement>>('searchInput');
+
+  /** 表單送出（按 Enter、手機鍵盤的搜尋鍵或搜尋按鈕都會走這裡）；輸入法組字中的 Enter 瀏覽器不會送出 */
+  protected onSubmit(event: Event) {
+    event.preventDefault();
+    const typed = this.inputRef()?.nativeElement.value;
+    if (typed !== undefined) this.value.set(typed);
+    this.submit();
+  }
 
   /** 同步輸入框內容到 value */
   protected onInput(event: Event) {
