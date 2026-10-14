@@ -14,6 +14,10 @@
   :host-context(body:has(dialog[open])),
   :host-context(body:has(.app-mobile-drawer.is-open)) { visibility: hidden; pointer-events: none; }
   .page-tools { display: grid; justify-items: start; gap: 8px; }
+  /* 商城頁面（工具列在 .store-app 之外，無法直接取到商城變數）：頁面工具一律用商城的紫色主色 */
+  :host-context(body:has(.store-app)) .page-tools { --page-tools-accent: #6b4f9e; }
+  :host-context(body:has(.store-app)):host-context([data-theme='qmahdark']) .page-tools { --page-tools-accent: #b9a3e6; }
+  :host-context(body:has(.store-app)) .page-tools__trigger { color: var(--page-tools-accent); border-color: color-mix(in srgb, var(--page-tools-accent) 45%, var(--qmah-border)); }
   .page-tools__trigger {
     display: inline-flex;
     align-items: center;

@@ -277,7 +277,8 @@
 /* 手機：避開底部浮動選單，與回到頂端按鈕的位置規則一致；只留圖示與件數，省空間 */
 @include responsive.phone {
   .floating-cart {
-    left: max(16px, env(safe-area-inset-left));
+    /* 左下角已有全站的「頁面工具」圓鈕（12px 起、寬 44px），購物車排在它右邊，避免兩者疊在一起 */
+    left: calc(max(12px, env(safe-area-inset-left)) + 44px + 10px);
     right: auto;
     bottom: calc(24px + env(safe-area-inset-bottom) + var(--qmah-mobile-footer-lift, 0px));
     visibility: var(--qmah-mobile-tools-visibility, visible);
