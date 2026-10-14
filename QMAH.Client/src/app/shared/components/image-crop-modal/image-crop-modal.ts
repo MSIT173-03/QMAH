@@ -33,25 +33,24 @@ export class ImageCropModalComponent {
   }
 
   confirm(): void {
-    if (this.latestCroppedBlob) {
-      const croppedFile = new File([this.latestCroppedBlob], this.fileName, {
-        type: this.latestCroppedBlob.type || 'image/jpeg'
-      });
-      this.cropped.emit(croppedFile);
-    } else if (this.imageFile) {
-      // 裁切器還沒產生結果（例如使用者沒有拖動裁切框）就直接用原圖
-      this.cropped.emit(this.imageFile);
-    }
+    const file = this.latestCroppedBlob
+      ? new File([this.latestCroppedBlob], this.fileName, {
+          type: this.latestCroppedBlob.type || 'image/jpeg'
+        })
+      : this.imageFile;
+    // 先關閉目前圖片，再通知呼叫端。呼叫端可能立刻開啟佇列的下一張。
     this.dialogEl.nativeElement.close();
+    if (file) this.cropped.emit(file);
   }
 
   skip(): void {
-    if (this.imageFile) this.cropped.emit(this.imageFile);
+    const file = this.imageFile;
     this.dialogEl.nativeElement.close();
+    if (file) this.cropped.emit(file);
   }
 
   cancel(): void {
-    this.cancelled.emit();
     this.dialogEl.nativeElement.close();
+    this.cancelled.emit();
   }
 }

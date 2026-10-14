@@ -331,3 +331,9 @@
 .order-line-link:hover { color: var(--color-accent); border-bottom-color: var(--color-accent); }
 .order-line-review { margin-left: 12px; padding: 1px 10px; border: 1px solid var(--color-gold); border-radius: 999px; background: var(--color-gold-bg); color: var(--color-ink); font-size: var(--qmah-type-meta-size); font-weight: 700; text-decoration: none; white-space: nowrap; }
 .order-line-review:hover { background: var(--color-gold); color: #2a2012; }
+
+@media (max-width: 600px) {
+  .order-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); overflow: visible; gap: 4px; }
+  .order-tab { min-width: 0; justify-content: center; gap: 4px; padding: 8px 4px; font-size: 14px; white-space: normal; }
+  .order-tab-count { flex: none; }
+}

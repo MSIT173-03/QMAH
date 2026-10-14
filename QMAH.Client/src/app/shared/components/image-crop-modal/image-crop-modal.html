@@ -1,4 +1,4 @@
-<dialog #dialogEl class="modal">
+<dialog #dialogEl class="modal" (cancel)="$event.preventDefault(); cancel()">
   <div class="modal-box max-w-2xl">
     <h3 class="font-bold text-lg mb-4">裁切圖片</h3>
 
