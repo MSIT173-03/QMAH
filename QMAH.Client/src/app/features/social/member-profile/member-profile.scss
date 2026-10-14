@@ -57,3 +57,5 @@
 .mp-badge small { color: var(--qmah-muted); font-size: 0.75rem; }
 .mp-badge.is-worn { border-color: color-mix(in srgb, #b58a1b 55%, var(--qmah-border)); background: color-mix(in srgb, #b58a1b 9%, var(--qmah-surface-elevated, var(--qmah-surface))); }
 .mp-badge.is-worn strong::before { content: '配戴中 · '; color: #8a6710; font-size: 0.75rem; }
+
+.mp-hero__actions { display: flex; flex-wrap: wrap; gap: 8px; }

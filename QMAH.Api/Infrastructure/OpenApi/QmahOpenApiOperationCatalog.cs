@@ -53,6 +53,7 @@ internal static class QmahOpenApiOperationCatalog
             ["Social.CreatePost"] = ("建立社群貼文", "需要登入，依 request body（請求本文，送出的 JSON 內容）中的 `PostType`、`BoardCode`、`Title`、`Content`、文物關聯、地點與 `MediaIds` 建立一般貼文或公告貼文。社群圖片必須屬於目前會員且可用，成功回傳 `201 Created`（已建立資源）。"),
             ["Social.CreateComment"] = ("建立貼文留言", "需要登入，依 path parameter（路徑參數）`postId` 與 request body（請求本文，送出的 JSON 內容）中的 `Content`、`ParentCommentId` 新增貼文留言或回覆。目標貼文須已發布，回覆的父留言須屬於同一貼文；成功回傳 `201 Created`（已建立資源）。"),
             ["Social.BookmarkPost"] = ("收藏貼文", "需要登入，依 path parameter（路徑參數）`id` 收藏已發布的貼文。重複收藏回傳 `204 No Content`（成功但沒有回應內容），貼文不存在或不可見時回傳 `404`。"),
+            ["Social.AddFriend"] = ("加好友", "需要登入。送一則好友邀請通知到對方的通知中心；同一人對同一位會員 24 小時內只通知一次。成功回傳 `204 No Content`（成功但沒有回應內容）。"),
             ["Social.SendMemberMessage"] = ("留言給會員", "需要登入。留言會送進對方的通知中心，內容最多 300 字，並套用關鍵字與洗版規則；同一人對同一位會員每小時最多 5 則。成功回傳 `204 No Content`（成功但沒有回應內容）。"),
             ["Social.UnbookmarkPost"] = ("取消收藏貼文", "需要登入，依 path parameter（路徑參數）`id` 取消收藏。尚未收藏時同樣回傳 `204 No Content`（成功但沒有回應內容）。"),
             ["Social.CreateReport"] = ("檢舉社群內容", "需要登入，依 request body（請求本文，送出的 JSON 內容）中的 `TargetType`、`TargetId`、`Reason` 與選填的 `Detail` 建立檢舉紀錄。目標須為可檢舉的公開貼文或留言，成功建立待處理檢舉時回傳 `202 Accepted`（已接受後續處理）。"),

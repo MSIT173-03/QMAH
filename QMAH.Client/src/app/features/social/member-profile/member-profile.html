@@ -31,7 +31,15 @@
             @if (profile.isPublic && profile.email) { <li><a class="social-author-link" [href]="'mailto:' + profile.email">{{ profile.email }}</a></li> }
           </ul>
         </div>
-        @if (!isSelf) { <a class="btn btn-primary mp-hero__cta" href="#mp-message"><svg lucideMessageCircle aria-hidden="true" focusable="false"></svg>留言給對方</a> }
+        @if (!isSelf) {
+          <div class="mp-hero__actions">
+            @if (signedIn) {
+              <button type="button" class="btn btn-outline mp-hero__cta" [disabled]="friendSending || friendSent" (click)="addFriend()"><svg lucideUserPlus aria-hidden="true" focusable="false"></svg>{{ friendSent ? '已送出好友邀請' : '加好友' }}</button>
+            }
+            <a class="btn btn-primary mp-hero__cta" href="#mp-message"><svg lucideMessageCircle aria-hidden="true" focusable="false"></svg>留言給對方</a>
+          </div>
+          @if (friendError) { <p class="mp-message__err" role="alert">{{ friendError }}</p> }
+        }
       </div>
     </section>
 

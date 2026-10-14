@@ -9,7 +9,7 @@ import { forkJoin } from 'rxjs';
 import { EventListItem, SocialApiService, SocialMemberProfile, SocialPostListItem } from '../../../core/services/social-api';
 import { MeApiService } from '../../../core/services/me-api';
 import { BoardIconComponent } from '../../../shared/components/board-icon/board-icon';
-import { LucideArrowLeft, LucideCalendarDays, LucideFileText, LucideMessageCircle, LucideSend, LucideTrophy, LucideUserRound } from '@lucide/angular';
+import { LucideArrowLeft, LucideCalendarDays, LucideFileText, LucideMessageCircle, LucideSend, LucideTrophy, LucideUserRound, LucideUserPlus } from '@lucide/angular';
 import { boardLabel, eventMode } from '../social-labels';
 import { stripSocialMarkup } from '../../../shared/social-markup';
 
@@ -20,7 +20,7 @@ const MESSAGE_MAX = 300;
 @Component({
   selector: 'app-member-profile',
   standalone: true,
-  imports: [SocialWidthToggleComponent, CommonModule, FormsModule, RouterLink, BoardIconComponent, LucideArrowLeft, LucideCalendarDays, LucideFileText, LucideMessageCircle, LucideSend, LucideTrophy, LucideUserRound],
+  imports: [SocialWidthToggleComponent, CommonModule, FormsModule, RouterLink, BoardIconComponent, LucideArrowLeft, LucideCalendarDays, LucideFileText, LucideMessageCircle, LucideSend, LucideTrophy, LucideUserRound, LucideUserPlus],
   templateUrl: './member-profile.html',
   styleUrls: ['../social-common.scss', './member-profile.scss']
 })
@@ -48,6 +48,24 @@ export class MemberProfileComponent implements OnChanges {
   sending = false;
   sentNotice = false;
   sendError: string | null = null;
+
+  friendSent = false;
+  friendSending = false;
+  friendError: string | null = null;
+
+  addFriend(): void {
+    if (this.friendSending || this.friendSent) return;
+    this.friendSending = true;
+    this.friendError = null;
+    this.socialApi.addFriend(this.id).subscribe({
+      next: () => { this.friendSending = false; this.friendSent = true; this.cdr.detectChanges(); },
+      error: (error: HttpErrorResponse) => {
+        this.friendSending = false;
+        this.friendError = error.error?.detail ?? '送出失敗，請稍後再試。';
+        this.cdr.detectChanges();
+      }
+    });
+  }
 
   get isSelf(): boolean {
     return this.meApi.me()?.id === this.id;
@@ -94,6 +112,8 @@ export class MemberProfileComponent implements OnChanges {
     this.loadError = null;
     this.avatarFailed = false;
     this.sentNotice = false;
+    this.friendSent = false;
+    this.friendError = null;
     forkJoin({
       profile: this.socialApi.getMember(this.id),
       posts: this.socialApi.getPosts({ userId: this.id, postType: 'POST', pageSize: 10 }),

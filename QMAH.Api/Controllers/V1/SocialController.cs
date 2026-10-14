@@ -367,6 +367,48 @@ public sealed class SocialController(
         return NoContent();
     }
 
+    // 加好友（輕量版，不新增資料表）：送一則「想加你為好友」通知到對方通知中心，點通知回到邀請者個人頁，
+    // 對方也按「加好友」即互為好友。同一人對同一位會員 24 小時內只送一次，避免洗版。
+    [Authorize]
+    [EnableRateLimiting("socialContent")]
+    [HttpPost("members/{userId:guid}/friend")]
+    public async Task<IActionResult> AddFriend(Guid userId, CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var senderId))
+            return Unauthorized();
+        if (senderId == userId)
+            return Problem(statusCode: StatusCodes.Status400BadRequest, title: "不能加自己", detail: "請到其他會員的個人頁加好友。");
+
+        var sender = await db.UserProfiles.AsNoTracking()
+            .Where(item => item.UserId == senderId && item.User.Status == "ACTIVE")
+            .Select(item => item.Nickname)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (sender is null)
+            return Forbid();
+        if (!await db.Users.AnyAsync(user => user.Id == userId && user.Status == "ACTIVE", cancellationToken))
+            return MissingResource("找不到會員", "這位會員不存在或已停用。");
+
+        var targetUrl = $"/social/members/{senderId}";
+        var since = DateTime.UtcNow.AddHours(-24);
+        if (await db.UserNotifications.AnyAsync(
+                item => item.UserId == userId && item.TargetUrl == targetUrl && item.Title.EndsWith("想加你為好友") && item.CreatedAt >= since,
+                cancellationToken))
+            return NoContent();
+
+        db.UserNotifications.Add(new UserNotification
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            Title = $"{sender} 想加你為好友",
+            Content = "你們都在收集台灣的文物故事。點這裡看看對方的個人頁，也加對方好友就能互相關注。",
+            TargetUrl = targetUrl,
+            IsRead = false,
+            CreatedAt = DateTime.UtcNow,
+        });
+        await db.SaveChangesAsync(cancellationToken);
+        return NoContent();
+    }
+
     // 標準看板清單 + 資料庫既有的看板代碼合併，讓前端的篩選選單不會漏掉舊資料用過的看板
     // （例如 GAME），做法對齊 QMAH.Web 的 SocialPostAdminController.LoadBoardCodes。
     private static readonly string[] StandardBoardCodes =

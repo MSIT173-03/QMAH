@@ -347,6 +347,11 @@ export class SocialApiService {
     return this.http.post<void>(`${this.base}/members/${userId}/message`, { content });
   }
 
+  /** 加好友：送一則邀請通知給對方（24 小時內重複送出不會再通知）。 */
+  addFriend(userId: string): Observable<void> {
+    return this.http.post<void>(`${this.base}/members/${userId}/friend`, {});
+  }
+
   getPost(id: string): Observable<SocialPostDetails> {
     return this.live(`post/${id}`, () => this.http.get<SocialPostDetails>(`${this.base}/posts/${id}`));
   }
