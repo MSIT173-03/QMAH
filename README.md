@@ -12,11 +12,9 @@
 ![Angular 21](https://img.shields.io/badge/Angular-21.2-DD0031)
 ![SQL Server](https://img.shields.io/badge/SQL%20Server-DB--first-315E55)
 
-[QMAH](https://github.com/MSIT173-03/QMAH) ｜ [QMAH-Database](https://github.com/MSIT173-03/QMAH-Database)
-
 ## 專案簡介
 
-清明鑑定屋是資展國際「智慧應用微軟 C# 工程師養成班（MSIT173 期）」的結訓專題，由 5 位組員合作完成，已於 2026 年 10 月發表。名稱取自《清明上河圖》，以國立故宮博物院的開放文物資料為核心，做成一個可以逛圖鑑、玩鑑定遊戲、參與社群與逛商城的網站。
+清明鑑定屋是資展國際「智慧應用微軟 C# 工程師養成班（MSIT173 期）」的結訓專題，由 5 位組員合作完成，已於 2026 年 10 月發表。名稱取自《清明上河圖》。內容以國立故宮博物院的開放文物資料為基礎，有圖鑑、鑑定遊戲、社群與商城四個部分。
 
 | 模組 | 內容 |
 | --- | --- |
@@ -35,14 +33,12 @@
 | ![首頁](docs/images/home.jpg) | ![登入](docs/images/login.jpg) |
 | **社群廣場** | **購物商城** |
 | ![社群廣場](docs/images/social.jpg) | ![購物商城](docs/images/store.jpg) |
-
-**鑑定遊戲**
-
-![鑑定遊戲](docs/images/game.jpg)
+| **鑑定遊戲** | |
+| ![鑑定遊戲](docs/images/game.jpg) | |
 
 ### 線上展示
 
-專題發表後以 Azure 單台 VM 暫時部署，部署方式見 [deploy/azure-demo](deploy/azure-demo/README.md)。這是展示用環境，之後可能關閉，不保證長期可連線。
+線上展示：<https://qmah.eastus.cloudapp.azure.com/>。專題發表後以 Azure 單台 VM 暫時部署，之後可能關閉。部署方式見 [deploy/azure-demo](deploy/azure-demo/README.md)。
 
 ## 技術棧
 
@@ -84,7 +80,7 @@
 
 會員註冊使用 Cloudflare Turnstile。前端的 Site Key 可以公開，後端的 Secret Key 不行。
 
-- 開發階段曾把一組 Secret Key 寫進 `QMAH.Api/appsettings.Development.json` 並提交到 GitHub，這組金鑰要視為已公開，不得用在任何正式環境。僅刪除檔案內容不會讓它失效，必須到 Cloudflare 重新產生（輪替）。
+- 早期開發曾把一組開發用 Secret Key 提交進版控，現已從檔案中移除，該金鑰視為已公開，不用於正式環境。
 - 正式環境一律用環境變數 `Turnstile__SecretKey` 提供，不寫進任何版控檔案。
 - 本機開發建議改用 [Cloudflare 官方測試金鑰](https://developers.cloudflare.com/turnstile/troubleshooting/testing/)，前端 Site Key 與後端 Secret Key 要成對更換。也可以把自己的金鑰放在不進版控的 `appsettings.Local.json` 或 `dotnet user-secrets`。
 
