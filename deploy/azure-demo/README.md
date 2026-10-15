@@ -1,7 +1,7 @@
 # Azure 專題展示部署
 
 使用獨立的 Azure x64 主機提供 Angular 前台、API、MVC 後台與 SQL Server Express。
-展示環境使用 QMAH-Database 的 `db-v1.0.0` 發行備份，本機資料庫不改動。
+展示環境使用 QMAH-Database 的 發行備份（版本見 `use-release.sql`），本機資料庫不改動。
 
 ## 線上入口
 

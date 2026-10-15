@@ -1,6 +1,6 @@
 # QMAH 資料庫入口
 
-[QMAH 專案](https://github.com/MSIT173-03/QMAH) ｜ [QMAH-Docs 專案](https://github.com/MSIT173-03/QMAH-Docs) ｜ [QMAH-Database 專案](https://github.com/MSIT173-03/QMAH-Database) ｜ [QMAH-Docs 文件站](https://msit173-03.github.io/QMAH-Docs/)
+[QMAH 專案](https://github.com/MSIT173-03/QMAH) ｜ [QMAH-Database 專案](https://github.com/MSIT173-03/QMAH-Database)
 
 本目錄只保留產品程式需要的 DB-first 契約與相容版本標記：
 
@@ -17,7 +17,7 @@
 
 完整結構、共同資料、Identity、後台展示資料與版本歷史集中在 [QMAH-Database](https://github.com/MSIT173-03/QMAH-Database)。新環境使用 `db-v1.0.10` Release 的已驗證 `.bak` 或同源 `QMAH.sql` 建立 `QMAH`；舊 `db-v0.10.2` 的 SQL 重建問題不影響此新版。
 
-產生下一版 Snapshot 時，依 [資料工具參考](https://msit173-03.github.io/QMAH-Docs/reference/data-tools.html) 的單一輸出流程操作，並同步更新 `Schema.sql`、`VERSION`、QMAH-Database 的 `manifest.json` 與 Git tag。
+產生下一版 Snapshot 時，依 `tools/QmahDataTools` 的單一輸出流程操作，並同步更新 `Schema.sql`、`VERSION`、QMAH-Database 的 `manifest.json` 與 Git tag。
 
 ## db-v1.0.10 更新內容
 

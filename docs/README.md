@@ -1,8 +1,8 @@
 # QMAH 文件入口
 
-[QMAH 專案](https://github.com/MSIT173-03/QMAH) ｜ [QMAH-Docs 專案](https://github.com/MSIT173-03/QMAH-Docs) ｜ [QMAH-Database 專案](https://github.com/MSIT173-03/QMAH-Database) ｜ [QMAH-Docs 文件站](https://msit173-03.github.io/QMAH-Docs/)
+[QMAH 專案](https://github.com/MSIT173-03/QMAH) ｜ [QMAH-Database 專案](https://github.com/MSIT173-03/QMAH-Database)
 
-正式文件位於 [QMAH-Docs](https://msit173-03.github.io/QMAH-Docs/)。本檔只列出產品程式 Repository 內需要的入口，不在這裡維護第二套文件。
+本檔列出產品程式 Repository 內的文件入口與 API 摘要。
 
 ## 目前會員圖鑑 API
 
@@ -13,10 +13,11 @@
 - `GET /api/v1/me/economy`：取得各類鑰匙餘額與每把鑰匙的 `eligibleArtifactCount`。
 - `POST /api/v1/me/keys/{keyCode}/unlock`：送 `{ "artifactId": "<GUID>" }` 只適用 `UNIVERSAL`；`NORMAL`、`CATEGORY`、`ERA` 不指定目標，由伺服器依鑰匙範圍抽選。
 
-實作位置：`QMAH.Api/Controllers/V1/MemberCatalogController.cs`、`EconomyController.cs`、`ApiDtos.cs`；OpenAPI 的操作與欄位說明位於 `QMAH.Api/Infrastructure/OpenApi`。完整 request、response、錯誤與會員資料保存規則請看 [REST API 契約](https://msit173-03.github.io/QMAH-Docs/reference/rest-api.html) 與 [Catalog 圖鑑說明](https://msit173-03.github.io/QMAH-Docs/quick-reference/catalog.html)。
+實作位置：`QMAH.Api/Controllers/V1/MemberCatalogController.cs`、`EconomyController.cs`、`ApiDtos.cs`；OpenAPI 的操作與欄位說明位於 `QMAH.Api/Infrastructure/OpenApi`。完整 request 與 response 以 OpenAPI／Scalar 為準。
 
-- [QMAH-Docs GitHub](https://github.com/MSIT173-03/QMAH-Docs)
-- [開始開發](https://msit173-03.github.io/QMAH-Docs/getting-started/development-environment.html)
-- [REST API 契約](https://msit173-03.github.io/QMAH-Docs/reference/rest-api.html)
-- [Angular 使用者前台](https://msit173-03.github.io/QMAH-Docs/frontend/angular-development.html)
-- [資料庫與資料工具](https://msit173-03.github.io/QMAH-Docs/reference/data-tools.html)
+- [資料庫](../database/README.md)
+- [資料工具](../tools/QmahDataTools/README.md)
+
+## 介面設計基準
+
+- [前台色彩與視覺素材基準](ui-color-system.md)
