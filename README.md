@@ -8,7 +8,6 @@
 
 # QMAH｜清明鑑定屋
 
-[![Build](https://github.com/MSIT173-03/QMAH/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/MSIT173-03/QMAH/actions/workflows/build.yml)
 ![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4)
 ![Angular 21](https://img.shields.io/badge/Angular-21.2-DD0031)
 ![SQL Server](https://img.shields.io/badge/SQL%20Server-DB--first-315E55)
