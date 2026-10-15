@@ -70,8 +70,8 @@ _工具輸出/
 /QMAH.Media/media/*
 !/QMAH.Media/media/catalog/
 !/QMAH.Media/media/catalog/**
-!/QMAH.Media/media/social/
-!/QMAH.Media/media/social/**
+# 社群圖片只保留專題展示用的少數檔案（已追蹤），其餘不進版控
+/QMAH.Media/media/social/
 /QMAH.Media/uploads/
 
 # 作業系統產生的檔案
@@ -81,6 +81,11 @@ ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
 CLAUDE.md
+HANDOFF_CLAUDE.md
+# AI 工具設定只放本機
+/.github/skills/
+/.github/agents/
+/.github/hooks/
 .claude/launch.json
 QMAH.Client/start-dev.bat
 /QMAH.Client/.demo/
