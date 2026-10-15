@@ -65,7 +65,7 @@ ASP.NET Core 10、Entity Framework Core（DB-first）、Identity、SignalR、Ang
 
 ### Turnstile
 
-註冊使用 Cloudflare Turnstile。早期開發曾把一組開發用 Secret Key 提交進版控，現已移除，該金鑰視為已公開。正式環境用環境變數 `Turnstile__SecretKey`，本機可用 [Cloudflare 官方測試金鑰](https://developers.cloudflare.com/turnstile/troubleshooting/testing/)或 `dotnet user-secrets`。
+註冊使用 Cloudflare Turnstile。早期開發曾把一組開發用 Secret Key 提交進版控，現已移除，該金鑰已在 Cloudflare 輪替失效。正式環境用環境變數 `Turnstile__SecretKey`，本機可用 [Cloudflare 官方測試金鑰](https://developers.cloudflare.com/turnstile/troubleshooting/testing/)或 `dotnet user-secrets`。
 
 ## 資料夾結構
 
