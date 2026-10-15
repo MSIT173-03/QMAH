@@ -21,4 +21,3 @@
 ## 介面設計基準
 
 - [前台色彩與視覺素材基準](ui-color-system.md)
-- [前台介面整合原則](ui-integration-principles.md)
