@@ -31,11 +31,15 @@
 
 ### 畫面預覽
 
-| 首頁 | 鑑定遊戲 |
+| 首頁 | 登入 |
 | --- | --- |
-| ![首頁](docs/images/home.jpg) | ![鑑定遊戲](docs/images/game.jpg) |
+| ![首頁](docs/images/home.jpg) | ![登入](docs/images/login.jpg) |
 | **社群廣場** | **購物商城** |
 | ![社群廣場](docs/images/social.jpg) | ![購物商城](docs/images/store.jpg) |
+
+**鑑定遊戲**
+
+![鑑定遊戲](docs/images/game.jpg)
 
 ### 線上展示
 
