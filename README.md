@@ -90,7 +90,7 @@ QMAH/
 ├─ database/                      Schema.sql 結構契約與 VERSION
 ├─ deploy/azure-demo/             Azure 展示環境部署腳本
 ├─ tools/                         資料處理與驗證工具
-├─ docs/                          文件路標，正式文件在 QMAH-Docs
+├─ docs/                          文件路標與介面設計基準，正式文件在 QMAH-Docs
 ├─ .github/                       CI／CD 工作流程與 PR 範本
 └─ QMAH.DemoCredentials.csv       展示帳號範本（不含密碼）
 ```
