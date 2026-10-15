@@ -1,0 +1,11 @@
+FROM node:24 AS client
+WORKDIR /src/QMAH.Client
+COPY QMAH.Client/package*.json ./
+RUN npm ci
+COPY QMAH.Media /src/QMAH.Media
+COPY QMAH.Client/ ./
+RUN npm run build
+
+FROM nginx:1.29-alpine
+COPY --from=client /src/QMAH.Client/dist/qmah-client/browser /usr/share/nginx/html
+COPY deploy/docker/nginx.conf /etc/nginx/conf.d/default.conf

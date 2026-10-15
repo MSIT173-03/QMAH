@@ -1,0 +1,64 @@
+# 一鍵啟動：docker compose up --build，完成後開 http://localhost:8080
+# 第一次會下載約 40MB 的資料庫備份並還原，之後重啟不會重做。
+name: qmah
+
+x-app-env: &app-env
+  ASPNETCORE_ENVIRONMENT: Development
+  ConnectionStrings__QmahDatabase: "Server=db;Database=QMAH;User Id=sa;Password=${QMAH_SA_PASSWORD:-Qmah_Local_2026!};TrustServerCertificate=True"
+  QmahDatabaseDiscovery__Enabled: "false"
+  Media__AssetRootPath: /media
+  DataProtection__KeysPath: /keys
+  Frontend__ClientUrl: http://localhost:8080
+  Backend__AdminUrl: http://localhost:8080/admin
+  Cors__AllowedOrigins__0: http://localhost:8080
+
+services:
+  db-bak:
+    image: curlimages/curl:8.11.1
+    user: root
+    volumes: [bak:/backup]
+    entrypoint: ["sh", "-c", "[ -s /backup/QMAH.bak ] || curl -fL -o /backup/QMAH.bak https://github.com/MSIT173-03/QMAH-Database/releases/download/db-v1.0.10/QMAH-1.0.10.bak"]
+
+  db:
+    image: mcr.microsoft.com/mssql/server:2025-latest
+    depends_on:
+      db-bak: { condition: service_completed_successfully }
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${QMAH_SA_PASSWORD:-Qmah_Local_2026!}
+    volumes:
+      - bak:/backup:ro
+      - dbdata:/var/opt/mssql
+      - ./deploy/docker/db-entrypoint.sh:/db-entrypoint.sh:ro
+    entrypoint: ["/bin/bash", "/db-entrypoint.sh"]
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -d QMAH -Q 'SELECT 1' || exit 1"]
+      interval: 5s
+      retries: 60
+
+  api:
+    build: { context: ., dockerfile: deploy/docker/Dockerfile.dotnet, args: { PROJECT: QMAH.Api } }
+    depends_on:
+      db: { condition: service_healthy }
+    environment: *app-env
+    volumes: [keys:/keys, uploads:/media/uploads]
+
+  web:
+    build: { context: ., dockerfile: deploy/docker/Dockerfile.dotnet, args: { PROJECT: QMAH.Web } }
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      <<: *app-env
+      Hosting__PathBase: /admin
+    volumes: [keys:/keys, uploads:/media/uploads]
+
+  gateway:
+    build: { context: ., dockerfile: deploy/docker/Dockerfile.gateway }
+    depends_on: [api, web]
+    ports: ["127.0.0.1:8080:80"]
+
+volumes:
+  bak:
+  dbdata:
+  keys:
+  uploads:
