@@ -13,7 +13,7 @@
 ![Angular 21](https://img.shields.io/badge/Angular-21.2-DD0031)
 ![SQL Server](https://img.shields.io/badge/SQL%20Server-DB--first-315E55)
 
-[QMAH](https://github.com/MSIT173-03/QMAH) ｜ [QMAH-Docs](https://github.com/MSIT173-03/QMAH-Docs) ｜ [QMAH-Database](https://github.com/MSIT173-03/QMAH-Database) ｜ [開發文件站](https://msit173-03.github.io/QMAH-Docs/)
+[QMAH](https://github.com/MSIT173-03/QMAH) ｜ [QMAH-Database](https://github.com/MSIT173-03/QMAH-Database)
 
 ## 專案簡介
 
@@ -75,7 +75,7 @@
 
    瀏覽器開啟 `http://localhost:4200/`。`npm start` 會在缺套件時自動執行 `npm ci`。
 
-資料庫連線預設會自動尋找本機的 `QMAH`，需要固定目標時，在 `QMAH.Api/appsettings.Local.json` 與 `QMAH.Web/appsettings.Local.json` 覆寫 `QmahDatabase`（兩個檔案都不進版控，可參考同資料夾的 `appsettings.Local.example.json`）。更完整的環境說明、疑難排解與資料工具用法請看 [開發環境與啟動](https://msit173-03.github.io/QMAH-Docs/getting-started/development-environment.html)。
+資料庫連線預設會自動尋找本機的 `QMAH`，需要固定目標時，在 `QMAH.Api/appsettings.Local.json` 與 `QMAH.Web/appsettings.Local.json` 覆寫 `QmahDatabase`（兩個檔案都不進版控，可參考同資料夾的 `appsettings.Local.example.json`）。資料工具用法見 [tools/QmahDataTools](tools/QmahDataTools/README.md)。
 
 ### 展示帳號
 
@@ -102,7 +102,7 @@ QMAH/
 ├─ database/                      Schema.sql 結構契約與 VERSION
 ├─ deploy/azure-demo/             Azure 展示環境部署腳本
 ├─ tools/                         資料處理與驗證工具
-├─ docs/                          文件路標與介面設計基準，正式文件在 QMAH-Docs
+├─ docs/                          文件路標與介面設計基準
 ├─ .github/                       CI／CD 工作流程與 PR 範本
 └─ QMAH.DemoCredentials.csv       展示帳號範本（不含密碼）
 ```
@@ -112,7 +112,6 @@ QMAH/
 | Repository | 內容 |
 | --- | --- |
 | [QMAH](https://github.com/MSIT173-03/QMAH) | 本 Repository，產品程式與 Schema |
-| [QMAH-Docs](https://github.com/MSIT173-03/QMAH-Docs) | 繁體中文開發文件與 VitePress 文件站來源 |
 | [QMAH-Database](https://github.com/MSIT173-03/QMAH-Database) | 可直接還原的完整資料庫 Snapshot 與版本歷史 |
 
 ## Git 協作

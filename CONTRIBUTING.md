@@ -1,10 +1,10 @@
 # QMAH 協作入口
 
-[QMAH 專案](https://github.com/MSIT173-03/QMAH) ｜ [QMAH-Docs 專案](https://github.com/MSIT173-03/QMAH-Docs) ｜ [QMAH-Database 專案](https://github.com/MSIT173-03/QMAH-Database) ｜ [QMAH-Docs 文件站](https://msit173-03.github.io/QMAH-Docs/)
+[QMAH 專案](https://github.com/MSIT173-03/QMAH) ｜ [QMAH-Database 專案](https://github.com/MSIT173-03/QMAH-Database)
 
-QMAH 的分支、Commit、Pull Request、Schema 變更、Snapshot 交付與衝突處理規則，集中在 [Git 與 GitHub 協作手冊](https://msit173-03.github.io/QMAH-Docs/reference/git-workflow.html)。
+QMAH 的分支、Commit、Pull Request、Schema 變更、Snapshot 交付與衝突處理規則，參考本檔與 README。
 
-修改產品程式前，從[文件首頁](https://msit173-03.github.io/QMAH-Docs/)開啟對應文件。
+修改產品程式前，先閱讀 [README](README.md) 與 [docs](docs/README.md)。
 
 基本要求：
 
