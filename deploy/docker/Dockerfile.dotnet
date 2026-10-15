@@ -1,0 +1,16 @@
+# 用法：docker build -f deploy/docker/Dockerfile.dotnet --build-arg PROJECT=QMAH.Api .
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+ARG PROJECT
+WORKDIR /src
+COPY . .
+RUN dotnet publish ${PROJECT}/${PROJECT}.csproj -c Release -r linux-x64 --no-self-contained -o /out
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
+ARG PROJECT
+ENV PROJECT=${PROJECT} ASPNETCORE_URLS=http://+:8080
+WORKDIR /app
+COPY --from=build /out .
+COPY QMAH.Media /media
+RUN mkdir -p /keys && chown -R $APP_UID /keys /media
+USER $APP_UID
+ENTRYPOINT ["sh", "-c", "exec dotnet ${PROJECT}.dll"]

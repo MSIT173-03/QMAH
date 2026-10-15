@@ -19,10 +19,10 @@
 | 首頁 | 登入 |
 | --- | --- |
 | ![首頁](docs/images/home.jpg) | ![登入](docs/images/login.jpg) |
+| **圖鑑** | **鑑定遊戲** |
+| ![圖鑑](docs/images/catalog.jpg) | ![鑑定遊戲](docs/images/game.jpg) |
 | **社群廣場** | **購物商城** |
 | ![社群廣場](docs/images/social.jpg) | ![購物商城](docs/images/store.jpg) |
-| **鑑定遊戲** | |
-| ![鑑定遊戲](docs/images/game.jpg) | |
 
 ## 功能
 
@@ -41,6 +41,18 @@
 ASP.NET Core 10、Entity Framework Core（DB-first）、Identity、SignalR、Angular 21.2、TypeScript、SQL Server、Cloudflare Turnstile、GitHub Actions。
 
 ## 快速啟動
+
+### 方法一：Docker（最快）
+
+只需要 [Docker Desktop](https://www.docker.com/products/docker-desktop/)：
+
+```bash
+docker compose up --build
+```
+
+第一次會編譯程式並下載約 40MB 的資料庫備份，完成後開 <http://localhost:8080>，管理後台在 <http://localhost:8080/admin/>。資料庫密碼可用環境變數 `QMAH_SA_PASSWORD` 覆寫，預設值只適用本機。`docker compose down -v` 會一併清除資料庫與上傳檔。
+
+### 方法二：本機開發
 
 需要 .NET SDK 10.0.301 以上、Node.js（版本見 `QMAH.Client/package.json`）與 SQL Server。
 
@@ -77,6 +89,7 @@ QMAH.Infrastructure/   Entity、DbContext 與匯入核心
 QMAH.Media/            共用媒體
 database/              Schema.sql 與 VERSION
 deploy/azure-demo/     Azure 部署腳本
+deploy/docker/         Docker 建置檔
 tools/                 資料處理與驗證工具
 docs/                  文件
 ```

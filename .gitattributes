@@ -11,3 +11,7 @@ deploy/azure-demo/*.sh text eol=lf
 deploy/azure-demo/*.service text eol=lf
 deploy/azure-demo/*.timer text eol=lf
 deploy/azure-demo/Caddyfile text eol=lf
+
+# Docker 啟動腳本在容器內執行，不能轉成 CRLF。
+deploy/docker/*.sh text eol=lf
+deploy/docker/nginx.conf text eol=lf
