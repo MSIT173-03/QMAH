@@ -29,6 +29,14 @@
 
 商城商品是課程示意資料，沒有實際交易，也不代表故宮官方商品。
 
+### 畫面預覽
+
+| 首頁 | 鑑定遊戲 |
+| --- | --- |
+| ![首頁](docs/images/home.jpg) | ![鑑定遊戲](docs/images/game.jpg) |
+| **社群廣場** | **購物商城** |
+| ![社群廣場](docs/images/social.jpg) | ![購物商城](docs/images/store.jpg) |
+
 ### 線上展示
 
 專題發表後以 Azure 單台 VM 暫時部署，部署方式見 [deploy/azure-demo](deploy/azure-demo/README.md)。這是展示用環境，之後可能關閉，不保證長期可連線。
@@ -113,7 +121,7 @@ feature/<area> → Pull Request → develop → Pull Request → main
 
 ## 授權與資料來源
 
-本 Repository 為課程專題，僅供學習、開發、測試與專題發表，不提供實際交易，也不做商業用途。
+本 Repository 的程式碼採 [MIT License](LICENSE)。專題僅供學習、開發、測試與專題發表，不提供實際交易，也不做商業用途。下列文物資料與圖像不在 MIT 範圍內，依其原授權使用。
 
 - 文物資料與圖像取自國立故宮博物院[典藏資料檢索－Open Data](https://digitalarchive.npm.gov.tw/opendata/)中明確標示開放的內容，依各資料頁所載的 CC0 或 CC BY 4.0 使用。需要標示姓名的素材，資料庫保留作品名稱、來源網址、授權代碼與 `AttributionText`，這些欄位不可移除。
 - 本專題不使用來源商城的商品圖片或即時售價。
