@@ -5,6 +5,7 @@ using QMAH.Web.Areas.Store.ViewModels;
 using QMAH.Infrastructure.Data;
 using QMAH.Web.Infrastructure.AdminNavigation;
 using QMAH.Infrastructure.Models.Entities;
+using QMAH.Infrastructure.Services.Social;
 
 namespace QMAH.Web.Areas.Store.Controllers;
 
@@ -70,8 +71,8 @@ public class CouponController : Controller
             ValidityDays = model.ValidityDays,
             DiscountValue = model.DiscountValue,
             MinimumAmount = model.MinimumAmount,
-            StartAt = model.StartAt,
-            EndAt = model.EndAt,
+            StartAt = EventScheduleRules.InputToUtc(model.StartAt),
+            EndAt = EventScheduleRules.InputToUtc(model.EndAt),
             IsActive = model.IsActive
         });
 
@@ -129,8 +130,9 @@ public class CouponController : Controller
         coupon.ValidityDays = model.ValidityDays;
         coupon.DiscountValue = model.DiscountValue;
         coupon.MinimumAmount = model.MinimumAmount;
-        coupon.StartAt = model.StartAt;
-        coupon.EndAt = model.EndAt;
+        // 表單輸入台灣時間，API 以 UTC 比對有效期間，保存前統一換算。
+        coupon.StartAt = EventScheduleRules.InputToUtc(model.StartAt);
+        coupon.EndAt = EventScheduleRules.InputToUtc(model.EndAt);
         coupon.IsActive = model.IsActive;
 
         await db.SaveChangesAsync(cancellationToken);
@@ -212,8 +214,8 @@ public class CouponController : Controller
         ValidityDays = coupon.ValidityDays,
         DiscountValue = coupon.DiscountValue,
         MinimumAmount = coupon.MinimumAmount,
-        StartAt = coupon.StartAt,
-        EndAt = coupon.EndAt,
+        StartAt = EventScheduleRules.ToTaipei(coupon.StartAt),
+        EndAt = EventScheduleRules.ToTaipei(coupon.EndAt),
         IsActive = coupon.IsActive
     };
 }
