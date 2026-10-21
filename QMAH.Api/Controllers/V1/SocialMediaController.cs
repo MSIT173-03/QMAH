@@ -36,7 +36,7 @@ public sealed class SocialMediaController(
         if (!await IsActiveUserAsync(userId, cancellationToken))
             return Forbid();
 
-        var signature = await ReadImageSignatureAsync(file, cancellationToken);
+        var signature = await ImageSignatureReader.ReadAsync(file, cancellationToken);
         if (signature is null)
         {
             return Problem(
