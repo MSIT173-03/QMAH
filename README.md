@@ -8,6 +8,7 @@
 
 # QMAH｜清明鑑定屋
 
+[![Build](https://github.com/MSIT173-03/QMAH/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/MSIT173-03/QMAH/actions/workflows/build.yml)
 ![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4)
 ![Angular 21](https://img.shields.io/badge/Angular-21.2-DD0031)
 ![SQL Server](https://img.shields.io/badge/SQL%20Server-DB--first-315E55)
@@ -35,6 +36,21 @@
 | Store 商城 | 文物明信片示意商品、購物車、折價券、點數與訂單 |
 
 商城為課程示意資料，沒有實際交易。
+
+## 系統架構
+
+```mermaid
+flowchart LR
+    B[瀏覽器] --> G[反向代理<br/>Caddy / nginx]
+    G -->|靜態檔| C[Angular 前台]
+    G -->|/api /hubs /media| A[QMAH.Api<br/>REST API + SignalR]
+    G -->|/admin| W[QMAH.Web<br/>Razor 管理後台]
+    A --> D[(SQL Server)]
+    W --> D
+    A -.共用 Identity 與資料保護金鑰.- W
+```
+
+前台、API、後台是三個獨立的應用程式，共用同一個資料庫與登入 Cookie。API 與後台透過 `QMAH.Infrastructure` 共用 Entity 與 DbContext。
 
 ## 技術棧
 
@@ -79,6 +95,16 @@ docker compose up --build
 
 註冊使用 Cloudflare Turnstile。早期開發曾把一組開發用 Secret Key 提交進版控，現已移除，該金鑰已在 Cloudflare 輪替失效。正式環境用環境變數 `Turnstile__SecretKey`，本機可用 [Cloudflare 官方測試金鑰](https://developers.cloudflare.com/turnstile/troubleshooting/testing/)或 `dotnet user-secrets`。
 
+## 測試
+
+```powershell
+cd QMAH.Client
+npm test -- --watch=false      # 前端單元測試，88 個檔案、423 個案例
+dotnet build QMAH.sln          # 後端建置
+```
+
+`tools/` 內另有 API、帳號驗證與付款相關的檢查程式。GitHub Actions 的 Build 工作流程會在每次 push 與 PR 執行建置與前端測試。
+
 ## 資料夾結構
 
 ```text
@@ -93,6 +119,10 @@ deploy/docker/         Docker 建置檔
 tools/                 資料處理與驗證工具
 docs/                  文件
 ```
+
+## 資安與版本
+
+弱點回報方式與已知項目見 [SECURITY.md](SECURITY.md)，版本異動見 [CHANGELOG.md](CHANGELOG.md) 與 [Releases](https://github.com/MSIT173-03/QMAH/releases)。
 
 ## Git 協作
 
