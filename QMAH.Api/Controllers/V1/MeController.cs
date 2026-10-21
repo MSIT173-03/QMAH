@@ -1,3 +1,4 @@
+using QMAH.Api.Infrastructure.Media;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -222,26 +223,17 @@ public sealed class MeController(
             });
         }
 
-        // 允許的圖片格式
-        var allowedExtensions = new[]
-        {
-        ".jpg",
-        ".jpeg",
-        ".png",
-        ".webp"
-    };
-
-        var extension = Path
-            .GetExtension(avatarFile.FileName)
-            .ToLowerInvariant();
-
-        if (!allowedExtensions.Contains(extension))
+        // 以檔案內容判斷格式，不信任副檔名。頭貼只允許 JPG、PNG、WEBP。
+        var signature = await ImageSignatureReader.ReadAsync(avatarFile, cancellationToken);
+        if (signature is null || signature.Value.Extension == ".gif")
         {
             return BadRequest(new
             {
-                message = "只允許 JPG、JPEG、PNG、WEBP 圖片。"
+                message = "只允許 JPG、PNG、WEBP 圖片。"
             });
         }
+
+        var extension = signature.Value.Extension;
 
         // 找目前登入會員的 Profile
         var profile = await db.UserProfiles
