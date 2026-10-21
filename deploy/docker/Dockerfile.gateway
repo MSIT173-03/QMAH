@@ -1,4 +1,4 @@
-FROM node:24 AS client
+FROM node:25 AS client
 WORKDIR /src/QMAH.Client
 COPY QMAH.Client/package*.json ./
 RUN npm ci
