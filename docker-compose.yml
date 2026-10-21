@@ -1,5 +1,7 @@
 # 一鍵啟動：docker compose up --build，完成後開 http://localhost:8080
 # 第一次會下載約 40MB 的資料庫備份並還原，之後重啟不會重做。
+# 資料庫密碼預設值只供本機使用：db 沒有對外開放埠，gateway 只綁 127.0.0.1。
+# 對外部署請設定環境變數 QMAH_SA_PASSWORD。
 name: qmah
 
 x-app-env: &app-env
