@@ -15,7 +15,6 @@
 - `QMAH.Api/appsettings.Development.json` 內的綠界（ECPay）資料是綠界官方公開的**測試環境**商店參數，只能連到 `payment-stage.ecpay.com.tw`，不涉及真實金流。
 - `docker-compose.yml` 的資料庫預設密碼只供本機使用，資料庫埠沒有對外開放，前台也只綁在 `127.0.0.1`。要自行部署請用 `QMAH_SA_PASSWORD` 覆寫。
 - Docker 版以 Development 環境執行，Turnstile 金鑰為空，不適合直接對外提供服務。
-- 前端 npm 的 `devDependencies`（建置與測試工具）仍有 3 個高風險通報，涉及 `braces`、`vite` 開發伺服器與 `@angular/cli` 內的 MCP SDK，只在開發機執行，不會進入正式建置產物。`npm audit --omit=dev` 為 0。
 
 ## 機密處理
 

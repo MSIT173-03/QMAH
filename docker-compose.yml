@@ -16,7 +16,7 @@ x-app-env: &app-env
 
 services:
   db-bak:
-    image: curlimages/curl:8.11.1
+    image: curlimages/curl:8.23.0
     user: root
     volumes: [bak:/backup]
     entrypoint: ["sh", "-c", "[ -s /backup/QMAH.bak ] || curl -fL -o /backup/QMAH.bak https://github.com/MSIT173-03/QMAH-Database/releases/download/db-v1.0.10/QMAH-1.0.10.bak"]
