@@ -9,7 +9,7 @@
 @section PageActions {
     @if (canCancel)
     {
-        <form asp-controller="Order" asp-action="Cancel" method="post" id="set-cancel-order">
+        <form asp-controller="Order" asp-action="SetCancel" method="post" id="set-cancel-order">
             <input type="hidden" name="id" value="@Model.Id" />
             <button type="submit" class="btn btn-danger"><i class="ti ti-x me-1"></i>取消訂單</button>
         </form>

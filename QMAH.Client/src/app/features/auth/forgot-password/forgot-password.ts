@@ -130,7 +130,6 @@ export class ForgotPassword {
         next: () => {
 
           // integration: 密碼重設成功狀態由畫面訊息呈現，不需保留開發期 console 輸出。
-          // console.log('forgot password success');
 
           this.submitting = false;
 

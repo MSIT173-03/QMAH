@@ -393,7 +393,6 @@ export class KeyList implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // console.log('[KeyList] ngOnInit 執行，開始呼叫 loadKeys()');
     this.loadKeys();
     this.loadCategoryEraNames();
     this.loadExchangeRules();
@@ -412,7 +411,6 @@ export class KeyList implements OnInit, OnDestroy {
 
     this.keyService.getKeys().subscribe({
       next: (keys) => {
-        // console.log('[KeyList] getKeys() 的 next 執行了，收到', keys.length, '把鑰匙');
         this.keys.set(keys);
         this.clampCraftSlots();
         this.loading.set(false);

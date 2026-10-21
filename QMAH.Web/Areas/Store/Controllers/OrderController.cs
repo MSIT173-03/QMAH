@@ -5,8 +5,7 @@ using QMAH.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using QMAH.Web.Infrastructure;
 using QMAH.Web.Infrastructure.AdminNavigation;
-using QMAH.Infrastructure.Models.Entities;
-
+using QMAH.Infrastructure.Services.Store;
 
 namespace QMAH.Web.Areas.Store.Controllers;
 
@@ -25,12 +24,15 @@ public class OrderController : Controller
 
     [HttpGet]
     [HttpGet("Index")]
-    public async Task<IActionResult> Index(int page = 0, int rows = 20)
+    public async Task<IActionResult> Index(int page = 0, int rows = 20, CancellationToken cancellationToken = default)
     {
-        bool isOverShot = page < 0 || rows < 0 || this.db.StoreOrders.Count() < page * rows;
+        bool isOverShot = page < 0 || rows is <= 0 or > 100
+            || await this.db.StoreOrders.CountAsync(cancellationToken) < page * rows;
         if (isOverShot) return View(new List<OrderSimplefyListItem>());
 
-        var query = from order in this.db.StoreOrders.Include(item => item.Payment).Skip(page * rows).Take(rows)
+        var query = from order in this.db.StoreOrders.Include(item => item.Payment)
+                        .OrderByDescending(item => item.CreatedAt).ThenBy(item => item.Id)
+                        .Skip(page * rows).Take(rows)
                     join user in this.db.Users on order.UserId equals user.Id
                     join items in this.db.OrderDetails on order.Id equals items.OrderId into itemsGroup
                     select new
@@ -39,9 +41,9 @@ public class OrderController : Controller
                         User = user,
                         Items = itemsGroup,
                     };
-        var data = query
+        var data = await query
             .Select(static v => new OrderSimplefyListItem(v.Order, v.User, v.Items.ToList()))
-            .ToList();
+            .ToListAsync(cancellationToken);
 
         ViewData["Page"] = page;
         ViewData["Rows"] = rows;
@@ -157,7 +159,7 @@ public class OrderController : Controller
     }
 
     [HttpGet("{id:Guid}")]
-    public async Task<IActionResult> GetOrder(Guid id)
+    public async Task<IActionResult> GetOrder(Guid id, CancellationToken cancellationToken)
     {
         var query = from order in this.db.StoreOrders.Include(order => order.Payment)
                     join user in this.db.Users on order.UserId equals user.Id
@@ -167,7 +169,7 @@ public class OrderController : Controller
                         Name = user.UserName,
                         Order = order
                     };
-        var res = query.FirstOrDefault();
+        var res = await query.FirstOrDefaultAsync(cancellationToken);
         if (res == null) return RedirectToAction("Index");
 
         var queryItems = from items in this.db.OrderDetails
@@ -182,8 +184,7 @@ public class OrderController : Controller
                              ProductId = product.Id,
                              ProductName = items.ProductNameSnapshot,
                          };
-        var list = queryItems.ToList();
-        if (list == null) list = [];
+        var list = await queryItems.ToListAsync(cancellationToken);
 
         var detail = new OrderFullDetail(res.Order, res.Name, list);
 
@@ -229,115 +230,27 @@ public class OrderController : Controller
         return result;
     }
 
-    [HttpGet("Create")]
-    public async Task<IActionResult> Create()
-    {
-        return View("OrderModifyForm", new OrderCreateData());
-    }
-
-    [HttpGet("AppendItems/{id:Guid}")]
-    public async Task<IActionResult> AppendOrderItems(Guid id)
-    {
-        ViewData["ActionName"] = "AppendItems";
-        ViewData["TargetGuid"] = id.ToString();
-        return View("OrderDetailsModifyForm");
-    }
-
-    [HttpPost("AppendItems")]
-    public async Task<IActionResult> AppendOrderItems([FromForm] OrderDetailAppendData data)
-    {
-        var target = this.db.StoreOrders.Where(v => v.Id == data.Id).FirstOrDefault();
-        if (target == null)
-        {
-            HttpContext.Response.StatusCode = 404;
-            return Json(new OrderDetailAppendDataResponse()
-            {
-                Type = OrderDetailAppendDataResponse.EResultType.ErrorOrderNotFound,
-                List = [],
-            });
-        }
-
-        var query = from prod in this.db.Products
-                    from list in data.List
-                    where prod.Id == list.Id && prod.Stock >= list.Amount
-                    select new
-                    {
-                        Id = prod.Id,
-                        Name = prod.Name,
-                        Price = prod.Price,
-                        Amount = list.Amount,
-                    };
-        var ls = query.ToList();
-
-        foreach (var item in query)
-        {
-            OrderDetail detail = new OrderDetail()
-            {
-                OrderId = data.Id,
-                ProductId = item.Id,
-                ProductNameSnapshot = item.Name,
-                UnitPrice = item.Price,
-                Quantity = item.Amount,
-                LineTotal = item.Amount * item.Price,
-            };
-
-            this.db.OrderDetails.Add(detail);
-        }
-
-        this.db.SaveChanges();
-
-
-        return Json(new OrderDetailAppendDataResponse()
-        {
-            Type = OrderDetailAppendDataResponse.EResultType.Success,
-            List = ls.Select(v => new OrderDetailAppendDataResponse.Data { Id = v.Id, Name = v.Name }).ToList(),
-        });
-    }
-
     [HttpPost("Cancel")]
-    public async Task<IActionResult> SetCancel([FromForm] Guid id)
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SetCancel([FromForm] Guid id, CancellationToken cancellationToken)
     {
-        try
+        // 信用卡訂單可能已在綠界付款但 callback 尚未到達，後台無法查詢綠界，交給 API 的逾時取消先確認付款狀態。
+        var paymentType = await db.StoreOrders.AsNoTracking()
+            .Where(order => order.Id == id)
+            .Select(order => order.Payment == null ? null : order.Payment.PaymentType)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (paymentType == "CREDIT_CARD")
+            return Conflict("信用卡訂單會在付款逾時後由系統向綠界確認並自動取消，後台不直接取消。");
+
+        var outcome = await StoreOrderCancellation.CancelPendingAsync(db, id, null, cancellationToken);
+        return outcome switch
         {
-            var order = this.db.StoreOrders.Where(o => o.Id == id).FirstOrDefault();
-            if (order == null)
-            {
-                HttpContext.Response.StatusCode = 404;
-                return Json(new OrderCancelResult
-                {
-                    Type = OrderCancelResult.EResultType.ErrorNotFound
-                });
-            }
-
-            if (order.CancelledAt != null)
-            {
-                HttpContext.Response.StatusCode = 409;
-                return Json(new OrderCancelResult
-                {
-                    Type = OrderCancelResult.EResultType.ErrorCancelled,
-                });
-            }
-
-            order.CancelledAt = DateTime.Now;
-            order.Status = "CANCELLED";
-
-            this.db.StoreOrders.Update(order);
-            this.db.SaveChanges();
-
-            return Json(new OrderCancelResult
-            {
-                Type = OrderCancelResult.EResultType.Success
-            });
-        }
-        catch (Exception ex)
-        {
-            HttpContext.Response.StatusCode = 500;
-            return Json(new OrderCancelResult
-            {
-                Type = OrderCancelResult.EResultType.ErrorOtherException,
-                Message = ex.Message
-            });
-        }
+            PendingOrderCancelOutcome.Cancelled => Ok(),
+            PendingOrderCancelOutcome.NotFound => NotFound("找不到這筆訂單。"),
+            PendingOrderCancelOutcome.AlreadyCancelled => Conflict("這筆訂單已經取消。"),
+            PendingOrderCancelOutcome.AlreadyPaid => Conflict("已付款訂單不能直接取消，請走退款流程。"),
+            _ => Conflict("只有待付款訂單可以取消。")
+        };
     }
 
     private sealed record OrderDataRow(

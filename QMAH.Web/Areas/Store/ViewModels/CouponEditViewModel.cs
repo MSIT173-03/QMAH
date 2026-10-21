@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
+using QMAH.Infrastructure.Services.Social;
+
 namespace QMAH.Web.Areas.Store.ViewModels;
 
 public sealed class CouponEditViewModel
@@ -43,10 +45,10 @@ public sealed class CouponEditViewModel
     public decimal MinimumAmount { get; set; }
 
     [Display(Name = "開始時間")]
-    public DateTime StartAt { get; set; } = DateTime.Now;
+    public DateTime StartAt { get; set; } = EventScheduleRules.Now;
 
     [Display(Name = "結束時間")]
-    public DateTime EndAt { get; set; } = DateTime.Now.AddMonths(1);
+    public DateTime EndAt { get; set; } = EventScheduleRules.Now.AddMonths(1);
 
     [Display(Name = "啟用")]
     public bool IsActive { get; set; } = true;

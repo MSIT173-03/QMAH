@@ -84,12 +84,6 @@ public class KeyController : Controller
                 data(kd.EraBucketId, kd.CategoryId);
                 return View(kd);
             }
-            catch (Exception)
-            {
-                ViewBag.ErrorMessage = "發生未預期的錯誤,請稍後再試。";
-                data(kd.EraBucketId, kd.CategoryId);
-                return View(kd);
-            }
         });
     }
 
@@ -194,12 +188,6 @@ public class KeyController : Controller
             catch (DbUpdateException)
             {
                 ViewBag.ErrorMessage = "儲存失敗，請確認鑰匙代碼沒有重複，且解鎖範圍符合設定。";
-                data(kd.EraBucketId, kd.CategoryId);
-                return View(kd);
-            }
-            catch (Exception)
-            {
-                ViewBag.ErrorMessage = "發生未預期的錯誤,請稍後再試。";
                 data(kd.EraBucketId, kd.CategoryId);
                 return View(kd);
             }

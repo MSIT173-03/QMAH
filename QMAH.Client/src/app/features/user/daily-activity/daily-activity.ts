@@ -136,7 +136,6 @@ export class DailyActivity implements OnInit {
         next: (data) => {
 
           // integration: 每日活動資料由畫面消化，原本的開發期 console 輸出先停用。
-          // console.log('dailyActivity:', data);
 
           this.acceptResponse(data);
 
@@ -255,7 +254,6 @@ export class DailyActivity implements OnInit {
 
         next: (response) => {
 
-          // console.log('daily login success:', response);
 
           this.loggingIn = false;
 

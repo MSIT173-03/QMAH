@@ -13,7 +13,6 @@ using QMAH.Infrastructure.Models.Identity;
 namespace QMAH.Web.Areas.User.Controllers;
 
 [Area("User")]
-[EnableRateLimiting("auth")]
 public class AccountController : Controller
 {
     private readonly UserManager<ApplicationUser> _userManager;
@@ -54,6 +53,7 @@ public class AccountController : Controller
     }
 
     [HttpPost("/Account/Login")]
+    [EnableRateLimiting("auth")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(
         LoginViewModel model,

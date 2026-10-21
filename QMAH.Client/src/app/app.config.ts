@@ -17,13 +17,14 @@ import {
 
 import {
   ActivatedRouteSnapshot,
+  BaseRouteReuseStrategy,
   provideRouter,
+  RouteReuseStrategy,
   PreloadAllModules,
   withPreloading,
   withComponentInputBinding,
   withViewTransitions
 } from '@angular/router';
-
 
 import { routes } from './app.routes';
 import { environment } from '../environments/environment';
@@ -53,6 +54,14 @@ function gameMode(route: ActivatedRouteSnapshot): 'multiplayer' | 'training' | '
   if (path === '/game/training' || path === '/game/minigames') return 'training';
   if (path === '/game/how-to') return 'guide';
   return null;
+}
+
+// 遊戲房間元件在 ngOnInit 綁定房間的即時連線與心跳；換到另一個房間時重建元件，不沿用舊房間的狀態。
+class GameRoomReuseStrategy extends BaseRouteReuseStrategy {
+  override shouldReuseRoute(future: ActivatedRouteSnapshot, curr: ActivatedRouteSnapshot): boolean {
+    return super.shouldReuseRoute(future, curr)
+      && !(future.routeConfig?.path === 'game/room/:roomId' && future.params['roomId'] !== curr.params['roomId']);
+  }
 }
 
 // API 使用 Identity cookie 維持登入狀態；集中設定 credentials，避免各服務自行重複處理。
@@ -90,6 +99,7 @@ export const appConfig: ApplicationConfig = {
         }
       })
     ),
+    { provide: RouteReuseStrategy, useClass: GameRoomReuseStrategy },
 
     provideHttpClient(
       withInterceptors([apiCredentialsInterceptor, apiQueueFeedbackInterceptor, pageReadinessInterceptor, publicCatalogCacheInterceptor, apiReadDeadlineInterceptor]),
@@ -98,7 +108,5 @@ export const appConfig: ApplicationConfig = {
         headerName: 'X-XSRF-TOKEN'
       })
     ),
-
-
   ]
 };

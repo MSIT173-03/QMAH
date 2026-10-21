@@ -125,23 +125,13 @@ public class ArtifactController : Controller
             return Content("Id 不存在");
         }
 
-        var eraBuckets = _db.EraBuckets
-            .OrderBy(era => era.Name)
-            .ToList();
-
-        var categories = _db.ArtifactCategories
-            .OrderBy(category => category.Name)
-            .ToList();
-
         var artifact = _db.Artifacts.FirstOrDefault(item => item.Id == id);
         if (artifact == null)
         {
             return Content("Id 不存在");
         }
 
-        ViewBag.ArtifactCategoryList = new SelectList(categories, "Id", "Name", artifact.CategoryId);
-        ViewBag.EraBucketList = new SelectList(eraBuckets, "Id", "Name", artifact.EraBucketId);
-
+        LoadEditOptions(artifact);
         return View(artifact);
     }
 
@@ -152,6 +142,15 @@ public class ArtifactController : Controller
         if (artifact == null)
         {
             return Content("Id 不存在");
+        }
+
+        // 必填欄位空白時回到表單顯示錯誤，不讓資料庫的 NOT NULL 限制變成 500。
+        if (string.IsNullOrWhiteSpace(af.Name) || string.IsNullOrWhiteSpace(af.ArtifactRef) || string.IsNullOrWhiteSpace(af.SourceUrl))
+        {
+            ModelState.AddModelError(string.Empty, "名稱、文物編號與來源網址不可空白。");
+            af.PrimaryImagePath = artifact.PrimaryImagePath;
+            LoadEditOptions(af);
+            return View(af);
         }
 
         if (!string.IsNullOrWhiteSpace(af.PrimaryImagePath))
@@ -177,6 +176,20 @@ public class ArtifactController : Controller
         TempData["Success"] = "文物資料已更新。";
 
         return RedirectToAction(nameof(Index));
+    }
+
+    private void LoadEditOptions(Artifact artifact)
+    {
+        var eraBuckets = _db.EraBuckets
+            .OrderBy(era => era.Name)
+            .ToList();
+
+        var categories = _db.ArtifactCategories
+            .OrderBy(category => category.Name)
+            .ToList();
+
+        ViewBag.ArtifactCategoryList = new SelectList(categories, "Id", "Name", artifact.CategoryId);
+        ViewBag.EraBucketList = new SelectList(eraBuckets, "Id", "Name", artifact.EraBucketId);
     }
 
     private static int NormalizePageSize(int pageSize) =>

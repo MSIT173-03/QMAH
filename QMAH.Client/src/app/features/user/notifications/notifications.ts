@@ -313,7 +313,6 @@ export class Notifications implements OnInit {
 
           if (generation !== this.generation) return;
           // integration: 通知內容可能含會員資料，不再於正式流程輸出整包回應。
-          // console.log('notifications:', data);
 
           this.notifications = this.appending ? [...this.notifications, ...(data.items ?? [])] : (data.items ?? []);
           this.appending = false;
