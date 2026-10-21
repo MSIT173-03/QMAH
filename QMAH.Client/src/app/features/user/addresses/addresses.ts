@@ -203,7 +203,6 @@ export class Addresses implements OnInit {
         ) => {
 
           // integration: 地址資料只供畫面使用，停用原本的開發期整包回應輸出。
-          // console.log('addresses:', data);
 
           this.addresses = data;
 
@@ -287,7 +286,6 @@ export class Addresses implements OnInit {
           ) => {
 
             // integration: 地址資料只供畫面使用，停用原本的開發期整包回應輸出。
-            // console.log('update address success:', data);
 
             this.saving = false;
 
@@ -347,7 +345,6 @@ export class Addresses implements OnInit {
             data: MemberAddress
           ) => {
 
-            // console.log('create address success:', data);
 
             this.saving = false;
 
@@ -508,7 +505,6 @@ export class Addresses implements OnInit {
 
         next: () => {
 
-          // console.log('delete address success:', address.id);
 
           this.deletingId = null;
 
@@ -595,7 +591,6 @@ export class Addresses implements OnInit {
           data: MemberAddress
         ) => {
 
-          // console.log('set default address success:', data);
 
           this.defaultingId = null;
 

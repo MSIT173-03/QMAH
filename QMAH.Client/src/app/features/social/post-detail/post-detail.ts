@@ -6,7 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ConfirmationService } from '../../../core/services/confirmation';
-import { finalize } from 'rxjs';
+import { Subscription, finalize } from 'rxjs';
 
 import { CreateSocialCommentRequest, SocialApiService, SocialComment, SocialMedia, SocialPostArtifact, SocialPostDetails } from '../../../core/services/social-api';
 import { moderationMessage } from '../social-moderation';
@@ -41,6 +41,7 @@ export class PostDetailComponent implements OnChanges {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   private readonly confirmation = inject(ConfirmationService);
+  private postRequest?: Subscription;
   pendingAction = false;
 
   readonly boardLabel = boardLabel;
@@ -89,7 +90,9 @@ export class PostDetailComponent implements OnChanges {
   loadPost(): void {
     this.loading = true;
     this.loadError = null;
-    this.socialApi.getPost(this.id).subscribe({
+    // 快速切換貼文時取消上一個請求，避免較慢的舊回應蓋掉新貼文。
+    this.postRequest?.unsubscribe();
+    this.postRequest = this.socialApi.getPost(this.id).subscribe({
       next: (post) => {
         this.post = post;
         this.loadArtifact(post);

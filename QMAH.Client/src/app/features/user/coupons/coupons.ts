@@ -414,7 +414,6 @@ export class Coupons implements OnInit {
         ) => {
 
           // integration: 折價券清單不需在 console 留存，避免正式環境輸出會員資產資料。
-          // console.log('coupons:', data);
 
           this.coupons = data;
 
