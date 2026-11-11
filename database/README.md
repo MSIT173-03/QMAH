@@ -9,13 +9,13 @@
 - [`upgrades/0.7.0-to-0.8.0.sql`](upgrades/0.7.0-to-0.8.0.sql)：保留既有資料，將 `db-v0.7.0` 升級至 `db-v0.8.0`。
 - [`upgrades/0.8.0-to-0.9.0.sql`](upgrades/0.8.0-to-0.9.0.sql)：移除重複的一般鑰匙並啟用西夏年代鑰匙，將 `db-v0.8.0` 升級至 `db-v0.9.0`。
 - [`upgrades/0.10.0-to-0.10.1.sql`](upgrades/0.10.0-to-0.10.1.sql)：保留既有資料，貼文/留言新增 `SimHash` 重複偵測指紋、`ContentReports` 支援系統自動送出的檢舉，將 `db-v0.10.0` 升級至 `db-v0.10.1`。
-- [`upgrades/0.10.1-to-0.10.2.sql`](upgrades/0.10.1-to-0.10.2.sql)：新增 `ContentModerationSettings`（SimHash 比對天數／相似度門檻可由後台調整）；貼文/留言/圖片新增 `AiReviewedAt` 供 AI 內容審查背景排程追蹤進度，將 `db-v0.10.1` 升級至 `db-v0.10.2`。
-- [`upgrades/0.10.2-store-order-shipping.sql`](upgrades/0.10.2-store-order-shipping.sql)：僅供沿用 `db-v0.10.2` 舊 Snapshot 的環境升級訂單欄位；全新 `db-v0.11.0` 已包含，不需再執行。
-- [`upgrades/0.12.0-store-ecpay-payments.sql`](upgrades/0.12.0-store-ecpay-payments.sql)：保留既有資料，在 `db-v0.12.0` 上新增綠界付款嘗試 `PaymentAttempts`、付款狀態 `REFUND_REQUIRED` 與逾時取消用的訂單索引；可重複執行。
-- [`seeds/store-sale-prices.sql`](seeds/store-sale-prices.sql)：依穩定 `ExternalRef` 順序，對最多三件既有匯入商品寫入可追溯的示範折扣率；可重複執行。
-- [`seeds/store-showcase-orders-shipping.sql`](seeds/store-showcase-orders-shipping.sql)：**僅限純展示資料庫、手動選用**。沿用 `db-v0.10.2` 並套用上述欄位升級後，依目前商城規則重整展示訂單；新版 `db-v0.11.0` 已包含此結果，不需再執行。
+- [`upgrades/0.10.1-to-0.10.2.sql`](upgrades/0.10.1-to-0.10.2.sql)：新增 `ContentModerationSettings`（SimHash 比對天數／相似度門檻可由後台調整）。貼文/留言/圖片新增 `AiReviewedAt` 供 AI 內容審查背景排程追蹤進度，將 `db-v0.10.1` 升級至 `db-v0.10.2`。
+- [`upgrades/0.10.2-store-order-shipping.sql`](upgrades/0.10.2-store-order-shipping.sql)：僅供沿用 `db-v0.10.2` 舊 Snapshot 的環境升級訂單欄位。全新 `db-v0.11.0` 已包含，不需再執行。
+- [`upgrades/0.12.0-store-ecpay-payments.sql`](upgrades/0.12.0-store-ecpay-payments.sql)：保留既有資料，在 `db-v0.12.0` 上新增綠界付款嘗試 `PaymentAttempts`、付款狀態 `REFUND_REQUIRED` 與逾時取消用的訂單索引。可重複執行。
+- [`seeds/store-sale-prices.sql`](seeds/store-sale-prices.sql)：依穩定 `ExternalRef` 順序，對最多三件既有匯入商品寫入可追溯的示範折扣率。可重複執行。
+- [`seeds/store-showcase-orders-shipping.sql`](seeds/store-showcase-orders-shipping.sql)：**僅限純展示資料庫、手動選用**。沿用 `db-v0.10.2` 並套用上述欄位升級後，依目前商城規則重整展示訂單。新版 `db-v0.11.0` 已包含此結果，不需再執行。
 
-完整結構、共同資料、Identity、後台展示資料與版本歷史集中在 [QMAH-Database](https://github.com/MSIT173-03/QMAH-Database)。新環境使用 `db-v1.0.10` Release 的已驗證 `.bak` 或同源 `QMAH.sql` 建立 `QMAH`；舊 `db-v0.10.2` 的 SQL 重建問題不影響此新版。
+完整結構、共同資料、Identity、後台展示資料與版本歷史集中在 [QMAH-Database](https://github.com/MSIT173-03/QMAH-Database)。新環境使用 `db-v1.0.10` Release 的已驗證 `.bak` 或同源 `QMAH.sql` 建立 `QMAH`。舊 `db-v0.10.2` 的 SQL 重建問題不影響此新版。
 
 產生下一版 Snapshot 時，依 `tools/QmahDataTools` 的單一輸出流程操作，並同步更新 `Schema.sql`、`VERSION`、QMAH-Database 的 `manifest.json` 與 Git tag。
 
@@ -23,7 +23,7 @@
 
 完整快照來自 2026-10-14 更新完成的 Azure QMAH 資料庫，共 62 張表。包含貼文收藏與私訊、AI 審查狀態與紀錄、22 種點數兌換券，以及補齊商品已購買數量的 846 筆歷史展示訂單。評論、社群文章與審查案例保留線上資料。
 
-[下載備份與同源 SQL](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v1.0.10)。先核對 SHA256SUMS.txt；備份已通過線上及本機 RESTORE VERIFYONLY，並成功還原到隔離的本機資料庫。舊資料庫升級時先備份，按順序套用 1.0.8、1.0.9、1.0.10 腳本；完整 SQL 僅用於建立新資料庫。
+[下載備份與同源 SQL](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v1.0.10)。先核對 SHA256SUMS.txt。備份已通過線上及本機 RESTORE VERIFYONLY，並成功還原到隔離的本機資料庫。舊資料庫升級時先備份，按順序套用 1.0.8、1.0.9、1.0.10 腳本。完整 SQL 僅用於建立新資料庫。
 
 ## db-v1.0.6 更新內容
 
@@ -38,9 +38,9 @@
 
 本版對應 QMAH v1.0.0，接續 db-v0.12.1。主要差異是社群媒體改用新版儲存路徑，完整快照包含目前的貼文與媒體參照。
 
-- `social.SocialPosts` 新增 `MediaLayout`（預設 `AUTO`，可選 `SINGLE`、`DOUBLE`、`TRIPLE`）；兩個 Repository 的 Schema 與 EF model 已同步，共 58 張表。
-- 社群媒體使用相對於儲存根目錄的路徑；主程式兼容舊 `/media/` 參照，無效或越界路徑回傳 404。資料庫備份不含實體圖片，還原時需一併保留對應的媒體檔案與儲存根目錄設定。
-- 使用 `QMAH-1.0.0.bak` 或在乾淨資料庫執行 `QMAH-1.0.0.sql.zip` 內的 SQL；不要將完整 SQL 疊加到舊資料庫。正式快照不提供 0.12.1→1.0.0 增補腳本。
+- `social.SocialPosts` 新增 `MediaLayout`（預設 `AUTO`，可選 `SINGLE`、`DOUBLE`、`TRIPLE`）。兩個 Repository 的 Schema 與 EF model 已同步，共 58 張表。
+- 社群媒體使用相對於儲存根目錄的路徑。主程式兼容舊 `/media/` 參照，無效或越界路徑回傳 404。資料庫備份不含實體圖片，還原時需一併保留對應的媒體檔案與儲存根目錄設定。
+- 使用 `QMAH-1.0.0.bak` 或在乾淨資料庫執行 `QMAH-1.0.0.sql.zip` 內的 SQL。不要將完整 SQL 疊加到舊資料庫。正式快照不提供 0.12.1→1.0.0 增補腳本。
 - BAK、決定性 SQL、乾淨重建、逐表比對、EF model 與 Web 啟動驗證均通過。
 
 ## db-v0.12.1 更新內容
@@ -48,7 +48,7 @@
 本版對應 QMAH v0.12.1，結構契約 `Schema.sql` 與完整 Snapshot 一併納入綠界付款資料：
 
 - 新增 `store.PaymentAttempts`（綠界付款嘗試，每次前往付款都有獨立的 `MerchantTradeNo`，保留回呼時間、綠界交易編號與回應訊息），`Payments.Status` 增加 `REFUND_REQUIRED`（訂單取消後才收到付款，需人工退款），並新增 `IX_StoreOrders_Status_CreatedAt` 供逾時未付款訂單自動取消查詢。共 58 張表。
-- 本版是完整快照：`db-v0.12.0` 環境若要保留資料，可執行 `upgrades/0.12.0-store-ecpay-payments.sql`；要與正式展示資料一致則全新還原 `db-v0.12.1` 的 `.bak` 或同源 SQL。
+- 本版是完整快照：`db-v0.12.0` 環境若要保留資料，可執行 `upgrades/0.12.0-store-ecpay-payments.sql`。要與正式展示資料一致則全新還原 `db-v0.12.1` 的 `.bak` 或同源 SQL。
 - 附件的 SQL 以 zip 壓縮上傳（`QMAH-0.12.1.sql.zip`），解壓後內容與 Repository 根目錄的 `QMAH.sql` 逐位元組相同。
 
 ## db-v0.12.0 更新內容
