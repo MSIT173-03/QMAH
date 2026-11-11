@@ -2,8 +2,6 @@
 
 [QMAH 專案](https://github.com/MSIT173-03/QMAH) ｜ [QMAH-Database 專案](https://github.com/MSIT173-03/QMAH-Database)
 
-本檔列出產品程式 Repository 內的文件入口與 API 摘要。
-
 ## 封存、執行與維護
 
 - [主專案與本地啟動](../README.md)：Docker、Visual Studio 與必要服務設定。
