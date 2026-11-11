@@ -1,12 +1,14 @@
-# Azure 專題展示部署
+# Azure 專題展示部署（已結束）
+
+> 一個月免費展示已結束，原站不再提供服務。以下保留當時的架構與操作紀錄，**不是現行可用的線上環境**。需要執行專案請使用根目錄 README 的本地方式；雲端收尾與重新部署限制見 [展示結束說明](../../docs/demo-retirement.md)。
 
 使用獨立的 Azure x64 主機提供 Angular 前台、API、MVC 後台與 SQL Server Express。
 展示環境使用 QMAH-Database 的 發行備份（版本見 `use-release.sql`），本機資料庫不改動。
 
-## 線上入口
+## 歷史入口（停用）
 
-- 前台：https://qmah.eastus.cloudapp.azure.com/home
-- 管理後台：https://qmah.eastus.cloudapp.azure.com/admin/
+- 前台：`https://qmah.eastus.cloudapp.azure.com/home`
+- 管理後台：`https://qmah.eastus.cloudapp.azure.com/admin/`
 - 固定單台 Azure East US VM，2 vCPU、8 GB RAM、64 GB Standard SSD。
 - Angular 靜態檔、API、Razor 後台與 SQL Server Express 部署在同一台主機。
 
@@ -40,7 +42,7 @@ API、管理後台與 Caddy 由 systemd 在退出後自動重啟。健康檢查�
 程式部署會同步安裝新版健康檢查與 timer，並在回滾時還原舊版本。
 部署收到中止訊號或檔案搬移中途失敗時，依實際保存的目錄回復程式，
 輸出 `QMAH_ROLLBACK_OK` 或 `QMAH_ROLLBACK_FAILED`，避免宣稱回復成功但服務仍無法啟動。
-隔離故障測試使用 `python3 -m unittest discover -s deploy/azure-demo/tests -v`，也會由部署 CI 執行。
+隔離故障測試使用 `python3 -m unittest discover -s deploy/azure-demo/tests -v`，目前由一般 Build 的離線檢查執行，不會觸發部署。
 
 排查時先確認 `systemctl status qmah-api qmah-web caddy docker qmah-health.timer`，
 再查 `journalctl -t qmah-health --since '15 minutes ago'`。不要重跑 `bootstrap.sh` 或還原正式資料庫。
@@ -57,9 +59,12 @@ Turnstile Site Key 是公開設定，Secret Key 僅放在 API 的 `Turnstile__Se
 經 Logto 的 Google 登入使用 Logto 控制台的 Google Connector，不會讀取 Azure 的 Google 設定。
 會員驗證信與重設密碼目前由 Brevo 寄送；其他郵件服務設定存在不代表已加入這條寄信流程。
 
-## 分支自動更新
+## 歷史分支自動更新（已封存）
 
-推送 `deploy/azure-demo` 會執行 `.github/workflows/azure-demo.yml`，也可手動啟動同一流程。
+原先推送 `deploy/azure-demo` 會執行 Azure 部署。三個歷史工作流程現保存在 `archived-workflows/*.yml.disabled`，不位於 `.github/workflows`，不再由 GitHub Actions 自動或手動執行。
+這項程式庫調整不代表舊部署分支、Azure OIDC 授權與外部服務設定已一併撤銷；實際撤銷需帳號管理員依收尾清單處理。
+
+以下為原流程：
 前端既有測試、建置與 Linux 發佈通過後才會部署。Azure 授權使用只信任此分支的 GitHub OIDC，
 不在 GitHub 保存 SSH 金鑰或 Azure 長效密碼，也不放寬 VM 的 SSH 來源限制。
 

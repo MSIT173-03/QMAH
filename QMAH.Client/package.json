@@ -15,6 +15,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "pretest:critical": "node scripts/ensure-dependencies.mjs && node scripts/link-game-assets.mjs",
+    "test:critical": "ng test --watch=false --include=src/app/core/guards/auth-guard.spec.ts --include=src/app/core/services/api-read-deadline.spec.ts --include=src/app/core/services/notification-live.spec.ts --include=src/app/features/auth/login/login.spec.ts --include=src/app/features/member/economy/economy.spec.ts --include=src/app/store/pages/checkout/checkout.spec.ts --include=src/app/store/pages/orders/orders.spec.ts --include=src/app/shared/social-markup.spec.ts",
     "test:setup": "node --test scripts/ensure-dependencies.test.mjs scripts/dev-server-lifecycle.test.mjs"
   },
   "prettier": {
@@ -36,12 +38,12 @@
     "npm": ">=10.0.0"
   },
   "dependencies": {
-    "@angular/common": "21.2.25",
-    "@angular/compiler": "21.2.25",
-    "@angular/core": "21.2.25",
-    "@angular/forms": "21.2.25",
-    "@angular/platform-browser": "21.2.25",
-    "@angular/router": "21.2.25",
+    "@angular/common": "21.2.26",
+    "@angular/compiler": "21.2.26",
+    "@angular/core": "21.2.26",
+    "@angular/forms": "21.2.26",
+    "@angular/platform-browser": "21.2.26",
+    "@angular/router": "21.2.26",
     "@lucide/angular": "1.47.0",
     "@microsoft/signalr": "^10.0.11",
     "angularx-qrcode": "^21.0.5",
@@ -52,9 +54,9 @@
     "zone.js": "^0.16.3"
   },
   "devDependencies": {
-    "@angular/build": "21.2.25",
-    "@angular/cli": "21.2.25",
-    "@angular/compiler-cli": "21.2.25",
+    "@angular/build": "21.2.29",
+    "@angular/cli": "21.2.29",
+    "@angular/compiler-cli": "21.2.26",
     "@tailwindcss/cli": "^4.3.3",
     "@tailwindcss/postcss": "^4.3.3",
     "autoprefixer": "^10.5.5",
@@ -63,11 +65,13 @@
     "postcss": "^8.5.28",
     "tailwindcss": "^4.3.3",
     "typescript": "5.9.3",
-    "vitest": "4.1.11"
+    "vitest": "4.1.12"
   },
   "overrides": {
     "@modelcontextprotocol/sdk": "1.32.1",
     "@parcel/watcher": "2.6.0",
+    "glob": "14.0.4",
+    "minimatch": "11.0.8",
     "vite": "7.3.7"
   },
   "allowScripts": {

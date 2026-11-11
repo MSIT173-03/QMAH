@@ -424,6 +424,7 @@ if (app.Environment.IsDevelopment())
 // Middleware 順序會影響功能：先配對路由與限流，再修復舊 Cookie，最後建立使用者身分並檢查授權。
 // 新增需要 User 或 Role 的 middleware 必須放在 UseAuthentication 之後；Authorization 永遠不能早於 Authentication。
 app.UseRouting();
+app.UseQmahAdmissionControl(builder.Configuration);
 app.UseRateLimiter();
 app.UseQmahCookieRecovery(
     ".QMAH.Web.Auth",

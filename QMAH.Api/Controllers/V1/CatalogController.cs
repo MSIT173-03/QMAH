@@ -3,13 +3,15 @@ using Microsoft.AspNetCore.Mvc;
 
 using QMAH.Infrastructure.Data;
 using QMAH.Infrastructure.Media;
+using QMAH.Api.Services;
 
 namespace QMAH.Api.Controllers.V1;
 
 [Route("api/v1/catalog")]
 public sealed class CatalogController(
     QmahDbContext db,
-    QmahMediaUrlResolver mediaUrlResolver) : ApiControllerBase
+    QmahMediaUrlResolver mediaUrlResolver,
+    CatalogReferenceData referenceData) : ApiControllerBase
 {
     [HttpGet("artifacts")]
     public async Task<ActionResult<ApiPage<ArtifactListItemDto>>> GetArtifacts(
@@ -111,21 +113,12 @@ public sealed class CatalogController(
     [HttpGet("categories")]
     public async Task<ActionResult<IReadOnlyList<CodeLabelDto>>> GetCategories(
         CancellationToken cancellationToken = default) =>
-        Ok(await db.ArtifactCategories
-            .AsNoTracking()
-            .OrderBy(category => category.Name)
-            .Select(category => new CodeLabelDto(category.Id, category.Code, category.Name))
-            .ToListAsync(cancellationToken));
+        Ok(await referenceData.CategoriesAsync(cancellationToken));
 
     [HttpGet("eras")]
     public async Task<ActionResult<IReadOnlyList<CodeLabelDto>>> GetEras(
         CancellationToken cancellationToken = default) =>
-        Ok(await db.EraBuckets
-            .AsNoTracking()
-            .OrderBy(era => era.StartYear)
-            .ThenBy(era => era.Name)
-            .Select(era => new CodeLabelDto(era.Id, era.Code, era.Name))
-            .ToListAsync(cancellationToken));
+        Ok(await referenceData.ErasAsync(chronological: true, cancellationToken));
 
     private static string NormalizeCode(string? value) => value?.Trim().ToUpperInvariant() ?? "";
 }

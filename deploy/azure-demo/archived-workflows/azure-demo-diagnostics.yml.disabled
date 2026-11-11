@@ -1,3 +1,4 @@
+# Historical reference only. The former Azure environment is no longer a supported endpoint.
 name: Azure demo read-only diagnostics
 
 on:

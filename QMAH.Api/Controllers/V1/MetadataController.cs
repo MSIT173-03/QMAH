@@ -1,28 +1,18 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-
-using QMAH.Infrastructure.Data;
+using QMAH.Api.Services;
 
 namespace QMAH.Api.Controllers.V1;
 
 [AllowAnonymous]
 [Route("api/v1/metadata")]
-public sealed class MetadataController(QmahDbContext db) : ApiControllerBase
+public sealed class MetadataController(CatalogReferenceData referenceData) : ApiControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<ApiMetadataDto>> GetMetadata(CancellationToken cancellationToken = default)
     {
-        var categories = await db.ArtifactCategories
-            .AsNoTracking()
-            .OrderBy(category => category.Name)
-            .Select(category => new CodeLabelDto(category.Id, category.Code, category.Name))
-            .ToListAsync(cancellationToken);
-        var eras = await db.EraBuckets
-            .AsNoTracking()
-            .OrderBy(era => era.Code)
-            .Select(era => new CodeLabelDto(era.Id, era.Code, era.Name))
-            .ToListAsync(cancellationToken);
+        var categories = await referenceData.CategoriesAsync(cancellationToken);
+        var eras = await referenceData.ErasAsync(chronological: false, cancellationToken);
 
         return Ok(new ApiMetadataDto(
             categories,

@@ -11,7 +11,6 @@ import { HttpClient } from '@angular/common/http';
 import {
   BackToMember
 } from '../../../shared/back-to-member/back-to-member';
-import { QmahIconComponent } from '../../../shared/components/qmah-icon/qmah-icon';
 import { compareCouponOff, couponToneOf } from '../../../store/shared/coupon-tone';
 import { MemberApi } from '../../../store/api/member.api';
 import { CouponExchange } from '../../member/economy/coupon-exchange/coupon-exchange';
@@ -42,7 +41,6 @@ interface MemberCoupon {
     MemberTitle,
     CommonModule,
     BackToMember,
-    QmahIconComponent,
     CouponExchange
   ],
 

@@ -1,14 +1,12 @@
 using QMAH.Api.Hubs;
 using System.IO.Compression;
 using System.Security.Claims;
-using System.Threading.RateLimiting;
 
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -134,6 +132,8 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
     options.Level = CompressionLevel.Fastest;
 });
 builder.Services.AddProblemDetails();
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<CatalogReferenceData>();
 // OpenAPI transformer 集中補上 Cookie security scheme 與各 operation 的安全需求。
 // 新增 API 時仍應提供量身訂作的 summary／description；共用安全 metadata 不應散落在每個 Controller 重複維護。
 var openApiOptions = builder.Configuration
@@ -165,6 +165,7 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(allowedOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod()
+            .WithExposedHeaders("Retry-After")
             .AllowCredentials();
     });
 });
@@ -331,55 +332,7 @@ builder.Services.AddHostedService<PendingOrderExpiryWorker>();
 // 登入端點防止密碼嘗試拖慢其他 API 功能；發文/留言端點是緊急的洗版防護——
 // 短時間內狂發文章時，直接在這裡擋掉，不會走到 SimHash 比對／資料庫查詢，
 // 避免真的有人短時間灌爆時，反而是「查重複」那些查詢把資料庫拖垮。
-builder.Services.AddRateLimiter(options =>
-{
-    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-    options.OnRejected = async (context, cancellationToken) =>
-    {
-        var isAuthEndpoint = context.HttpContext.Request.Path.StartsWithSegments("/api/v1/account");
-        context.HttpContext.Response.ContentType = "application/problem+json; charset=utf-8";
-        await context.HttpContext.Response.WriteAsJsonAsync(new ProblemDetails
-        {
-            Status = StatusCodes.Status429TooManyRequests,
-            Title = isAuthEndpoint ? "登入嘗試過於頻繁" : "操作過於頻繁",
-            Detail = isAuthEndpoint ? "請稍後再試。" : "發文/留言速度過快，請稍後再試。"
-        }, cancellationToken);
-    };
-    options.AddPolicy("auth", httpContext =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-            _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = 30,
-                Window = TimeSpan.FromMinutes(1),
-                QueueLimit = 0,
-                AutoReplenishment = true
-            }));
-    // 兩種重寄入口共用 IP 限流，避免切換入口繞過寄信次數限制。
-    options.AddPolicy("verificationEmail", httpContext =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-            _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = 3,
-                Window = TimeSpan.FromMinutes(5),
-                QueueLimit = 0,
-                AutoReplenishment = true
-            }));
-    // 社群內容依登入會員 Id 分桶。
-    options.AddPolicy("socialContent", httpContext =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)
-                ?? httpContext.Connection.RemoteIpAddress?.ToString()
-                ?? "unknown",
-            _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = 10,
-                Window = TimeSpan.FromMinutes(1),
-                QueueLimit = 0,
-                AutoReplenishment = true
-            }));
-});
+builder.Services.AddQmahApiRateLimiting();
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Cookie.Name = QmahSharedAuthentication.CookieName;
@@ -630,17 +583,18 @@ if (Directory.Exists(mediaPaths.AchievementRoot))
     });
 }
 
-// 順序不可任意交換：先選路由與限流，再套 CORS，接著建立登入身分並執行授權，最後才進 Controller。
-// 需要讀取 User／Role 的新 middleware 放在 Authentication 後；需要讓瀏覽器看見錯誤回應的 middleware 也必須受 CORS 包覆。
+// CORS must wrap rate-limit rejections; authentication must precede policies
+// that partition by member id. Authorization still runs before controllers.
 app.UseRouting();
-app.UseRateLimiter();
+app.UseCors("AngularClient");
+app.UseQmahAdmissionControl(builder.Configuration);
 app.UseQmahCookieRecovery(
     ".QMAH.Web.Auth",
     ".QMAH.Web.Antiforgery",
     ".QMAH.Api.Auth",
     ".QMAH.Api.Antiforgery");
-app.UseCors("AngularClient");
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 app.Use(async (context, next) =>
 {
@@ -692,3 +646,6 @@ if (app.Environment.IsDevelopment() || openApiOptions.Enabled)
 }
 
 app.Run();
+
+// Allow the isolated integration harness to host the actual API entry point.
+public partial class Program;
