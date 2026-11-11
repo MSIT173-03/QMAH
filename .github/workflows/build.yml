@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main, develop]
   workflow_dispatch:
+    inputs:
+      run-load:
+        description: Run the isolated loopback API load scenario (never Azure)
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -15,6 +20,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  deployment-scripts:
+    name: Offline deployment checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Check shell syntax and recovery behavior without Azure
+        run: |
+          bash -n deploy/azure-demo/update.sh
+          bash -n deploy/azure-demo/backup-database.sh
+          bash -n deploy/azure-demo/health-recover.sh
+          sh -n deploy/docker/download-backup.sh
+          bash -n deploy/docker/db-entrypoint.sh
+          python3 -m unittest discover -s deploy/azure-demo/tests -v
+          python3 -m unittest discover -s deploy/docker/tests -v
+
   build:
     name: Build
     runs-on: windows-latest
@@ -77,3 +98,31 @@ jobs:
               exit $LASTEXITCODE
             }
           }
+
+      - name: Verify account, payment, API and ledger behavior without external services
+        shell: pwsh
+        run: |
+          $checks = @('AccountVerificationChecks', 'EcpayChecks', 'ApiReadChecks', 'ResilienceChecks', 'ApiVerification')
+          foreach ($check in $checks) {
+            dotnet run --project "tools/$check/$check.csproj" --no-build --configuration Release
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
+  local-load:
+    name: Isolated API load scenario
+    if: github.event_name == 'workflow_dispatch' && inputs.run-load
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
+        with:
+          global-json-file: global.json
+      - name: Measure the actual API with synthetic SQLite data
+        shell: pwsh
+        run: |
+          dotnet restore tools/ApiVerification/ApiVerification.csproj --locked-mode
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet run --project tools/ApiVerification/ApiVerification.csproj --configuration Release --no-restore -- --load --output api-load-results.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-Content api-load-results.json | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY

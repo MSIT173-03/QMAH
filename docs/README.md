@@ -4,6 +4,17 @@
 
 本檔列出產品程式 Repository 內的文件入口與 API 摘要。
 
+## 封存、執行與維護
+
+- [主專案與本地啟動](../README.md)：Docker、Visual Studio 與必要服務設定。
+- [展示結束與維護狀態](demo-retirement.md)：Azure 免費展示結束、雲端收尾與自行部署。
+- [資安維護紀錄](security-maintenance.md)：弱點修補、稽核方式與實際驗證範圍。
+- [測試怎麼選](testing.md)：最小風險檢查、測試合併與 CI 分工。
+- [隔離壓測](performance.md)：實際基準、查詢改善與容量限制。
+- [資安政策](../SECURITY.md)：私下回報方式與對外部署限制。
+- [歷史 Azure 部署](../deploy/azure-demo/README.md)：原部署設計，已停止自動執行。
+- [第三方登入檢查](external-login-checks.md)、[信箱驗證](email-verification.md)、[會員密碼](member-password.md)。
+
 ## 目前會員圖鑑 API
 
 會員圖鑑的狀態與歷史由 API 直接提供，前端不需要自行比對 `ArtifactUnlocks`：

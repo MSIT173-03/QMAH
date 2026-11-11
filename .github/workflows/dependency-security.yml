@@ -1,0 +1,58 @@
+name: Dependency security
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**/*.csproj'
+      - '**/packages.lock.json'
+      - 'QMAH.Client/package*.json'
+      - 'global.json'
+      - 'Directory.*'
+      - 'tools/Check-DependencySecurity.ps1'
+      - '.github/workflows/dependency-security.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - '**/*.csproj'
+      - '**/packages.lock.json'
+      - 'QMAH.Client/package*.json'
+      - 'global.json'
+      - 'Directory.*'
+      - 'tools/Check-DependencySecurity.ps1'
+      - '.github/workflows/dependency-security.yml'
+  schedule:
+    - cron: '0 1 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependency-security-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  npm:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24.x
+      - name: Audit runtime and development dependencies
+        working-directory: QMAH.Client
+        run: npm audit --package-lock-only
+
+  nuget:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
+        with:
+          global-json-file: global.json
+      - name: Audit all .NET projects including tools
+        shell: pwsh
+        run: ./tools/Check-DependencySecurity.ps1

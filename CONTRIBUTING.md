@@ -6,6 +6,8 @@ QMAH 的分支、Commit、Pull Request、Schema 變更、Snapshot 交付與衝�
 
 修改產品程式前，先閱讀 [README](README.md) 與 [docs](docs/README.md)。
 
+Azure 一個月免費展示已結束。日常修改、PR 與安全修補不得依賴舊站可用，也不應重新啟動歷史部署流程。請以本地環境與 CI 驗證；專題不再保證線上展示可用。
+
 基本要求：
 
 - 不執行 force push、不改寫共同歷史，也不把本機密碼提交到 Repository。

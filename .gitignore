@@ -22,6 +22,7 @@
 TestResults/
 coverage/
 coverage.*
+/api-load-results.json
 *.binlog
 publish/
 

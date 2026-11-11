@@ -12,10 +12,13 @@
 ![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4)
 ![Angular 21](https://img.shields.io/badge/Angular-21.2-DD0031)
 ![SQL Server](https://img.shields.io/badge/SQL%20Server-DB--first-315E55)
+![展示狀態](https://img.shields.io/badge/Azure%20Demo-已結束-777777)
 
 資展國際 MSIT173 期的結訓專題，5 人團隊，2026 年 10 月發表。以國立故宮博物院的開放文物資料為基礎，有圖鑑、鑑定遊戲、社群與商城。
 
-線上展示：<https://qmah.eastus.cloudapp.azure.com/>（Azure 暫時部署，之後可能關閉）
+> **Azure 一個月免費試用期已結束，原線上展示服務因此停止。** 本倉庫保留原始碼、畫面與本地啟動方式，供專題展示與學習使用。請使用下方的 Docker 或 Visual Studio 啟動；舊展示網址已不再作為可用入口。
+>
+> 停服背景、雲端資源收尾及日後自行部署的注意事項見 [展示結束與維護狀態](docs/demo-retirement.md)。資安修補仍可透過 PR 提出；本專題不提供正式服務或可用性承諾。
 
 | 首頁 | 登入 |
 | --- | --- |
@@ -63,14 +66,19 @@ ASP.NET Core 10、Entity Framework Core（DB-first）、Identity、SignalR、Ang
 只需要 [Docker Desktop](https://www.docker.com/products/docker-desktop/)：
 
 ```bash
-docker compose up --build
+docker compose build --pull
+docker compose up -d
 ```
 
-第一次會編譯程式並下載約 40MB 的資料庫備份，完成後開 <http://localhost:8080>，管理後台在 <http://localhost:8080/admin/>。資料庫密碼可用環境變數 `QMAH_SA_PASSWORD` 覆寫，預設值只適用本機。`docker compose down -v` 會一併清除資料庫與上傳檔。
+第一次會編譯程式並下載約 40MB 的資料庫備份，通過 SHA-256 校驗後才還原。可用 `docker compose logs -f` 查看進度；完成後開 <http://localhost:8080>，管理後台在 <http://localhost:8080/admin/>。這個流程使用 GitHub 資料庫發行檔，**不需要 Azure 帳號，也不會啟動舊 VM**。
+
+下載不完整不會被當成有效備份；既有但雜湊不符的檔案會先保存為 `QMAH.bak.unverified.*`，不直接刪除。SQL 初始化或還原失敗會明確退出，不會只留下「容器還在跑」的假象。使用者上傳、待審媒體與本機秘密設定不會打包進映像。
+
+資料庫密碼可用環境變數 `QMAH_SA_PASSWORD` 覆寫，預設值只適用本機。`docker compose down` 停止容器並保留資料；**`docker compose down -v` 會刪除資料庫、上傳檔與登入金鑰**，請先備份。
 
 ### 方法二：本機開發
 
-需要 .NET SDK 10.0.301 以上、Node.js（版本見 `QMAH.Client/package.json`）與 SQL Server。
+需要 .NET SDK 10.0.301 以上、Node.js 24 LTS 的最新修補版（CI／Docker 採用此主版本）與 SQL Server。
 
 1. 到 [QMAH-Database 的 db-v1.0.10](https://github.com/MSIT173-03/QMAH-Database/releases/tag/db-v1.0.10) 下載 `QMAH-1.0.10.bak`，在 SSMS 還原成 `QMAH`。也可以改跑同版本的 `QMAH-1.0.10.sql`。
 2. 啟動後端：
@@ -84,6 +92,7 @@ docker compose up --build
 
    ```powershell
    cd QMAH.Client
+   npm ci
    npm start
    ```
 
@@ -95,15 +104,27 @@ docker compose up --build
 
 註冊使用 Cloudflare Turnstile。早期開發曾把一組開發用 Secret Key 提交進版控，現已移除，該金鑰已在 Cloudflare 輪替失效。正式環境用環境變數 `Turnstile__SecretKey`，本機可用 [Cloudflare 官方測試金鑰](https://developers.cloudflare.com/turnstile/troubleshooting/testing/)或 `dotnet user-secrets`。
 
+Google／Logto 登入、寄信、Turnstile 與 AI 審查需要各自的有效服務設定；歷史展示環境的設定不代表仍可使用。自行部署時請使用自己的帳號與金鑰，不要沿用舊展示網域的回呼設定。
+
 ## 測試
+
+日常先執行前台 `npm run test:critical` 與受影響功能的測試；涉及權限或流量保護時，另跑隔離 API 檢查。測試分工、初始化測試合併與壓測方式見 [測試怎麼選](docs/testing.md)；不以案例總數衡量品質。
+
+需要完整回歸時：
 
 ```powershell
 cd QMAH.Client
-npm test -- --watch=false      # 前端單元測試，88 個檔案、423 個案例
-dotnet build QMAH.sln          # 後端建置
+npm run test:setup
+npm test -- --watch=false
+npm run build
+cd ..
+dotnet restore --locked-mode
+dotnet build QMAH.sln --no-restore --configuration Release
 ```
 
 `tools/` 內另有 API、帳號驗證與付款相關的檢查程式。GitHub Actions 的 Build 工作流程會在每次 push 與 PR 執行建置與前端測試。
+
+相依套件安全檢查另由 Dependency security 工作流程定期與 PR 執行，涵蓋 npm 的開發／正式套件，以及所有 .NET 專案的直接／間接套件。近期檢查結果與未驗證範圍見 [資安維護紀錄](docs/security-maintenance.md)。
 
 ## 資料夾結構
 
@@ -114,7 +135,7 @@ QMAH.Client/           Angular 前台
 QMAH.Infrastructure/   Entity、DbContext 與匯入核心
 QMAH.Media/            共用媒體
 database/              Schema.sql 與 VERSION
-deploy/azure-demo/     Azure 部署腳本
+deploy/azure-demo/     已結束的 Azure 展示部署紀錄
 deploy/docker/         Docker 建置檔
 tools/                 資料處理與驗證工具
 docs/                  文件
@@ -127,6 +148,8 @@ docs/                  文件
 ## Git 協作
 
 `feature/<area>` → PR → `develop` → PR → `main`，不 force push。規則見 [CONTRIBUTING.md](CONTRIBUTING.md)。
+
+`deploy/azure-demo` 是歷史部署分支，不再用來更新線上服務；Azure 工作流程已移到非執行目錄封存。一般建置與資安檢查繼續保留。
 
 ## 授權與資料來源
 

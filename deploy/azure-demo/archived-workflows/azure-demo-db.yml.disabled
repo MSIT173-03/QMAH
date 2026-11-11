@@ -1,3 +1,4 @@
+# Historical reference only. Do not restore this workflow without reviewing cloud billing and access.
 name: Apply Azure demo database updates
 
 # 資料庫更新需要明確手動啟動：先備份並驗證，再依序執行可重複執行的升級與種子腳本。

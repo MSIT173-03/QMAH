@@ -1,0 +1,15 @@
+{
+  "scenario": "public-metadata-warm",
+  "transport": "Kestrel loopback TCP",
+  "database": "temporary SQLite, synthetic rows",
+  "requests": 42649,
+  "concurrency": 16,
+  "durationSeconds": 5,
+  "failures": 0,
+  "queries": 85298,
+  "elapsedMs": 5001.85,
+  "requestsPerSecond": 8526.64,
+  "p50Ms": 1.48,
+  "p95Ms": 4.53,
+  "p99Ms": 7
+}
