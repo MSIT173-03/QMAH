@@ -12,7 +12,7 @@ on:
       - 'tools/Check-DependencySecurity.ps1'
       - '.github/workflows/dependency-security.yml'
   pull_request:
-    branches: [main, develop]
+    branches: [main]
     paths:
       - '**/*.csproj'
       - '**/packages.lock.json'

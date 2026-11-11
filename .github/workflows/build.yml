@@ -2,9 +2,9 @@ name: Build
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
-    branches: [main, develop]
+    branches: [main]
   workflow_dispatch:
     inputs:
       run-load:
@@ -20,20 +20,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deployment-scripts:
-    name: Offline deployment checks
+  docker-scripts:
+    name: Docker script checks
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - name: Check shell syntax and recovery behavior without Azure
+      - name: Check local Docker startup and backup behavior
         run: |
-          bash -n deploy/azure-demo/update.sh
-          bash -n deploy/azure-demo/backup-database.sh
-          bash -n deploy/azure-demo/health-recover.sh
           sh -n deploy/docker/download-backup.sh
           bash -n deploy/docker/db-entrypoint.sh
-          python3 -m unittest discover -s deploy/azure-demo/tests -v
           python3 -m unittest discover -s deploy/docker/tests -v
 
   build:

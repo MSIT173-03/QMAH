@@ -12,7 +12,7 @@
 - [測試怎麼選](testing.md)：最小風險檢查、測試合併與 CI 分工。
 - [隔離壓測](performance.md)：實際基準、查詢改善與容量限制。
 - [資安政策](../SECURITY.md)：私下回報方式與對外部署限制。
-- [歷史 Azure 部署](../deploy/azure-demo/README.md)：原部署設計，已停止自動執行。
+- [歷史 Azure 部署](https://github.com/MSIT173-03/QMAH/tree/1252a074/deploy/azure-demo)：舊腳本保留於 Git 歷史，不屬於目前版本。
 - [第三方登入檢查](external-login-checks.md)、[信箱驗證](email-verification.md)、[會員密碼](member-password.md)。
 
 ## 目前會員圖鑑 API
