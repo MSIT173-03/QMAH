@@ -135,7 +135,6 @@ QMAH.Client/           Angular 前台
 QMAH.Infrastructure/   Entity、DbContext 與匯入核心
 QMAH.Media/            共用媒體
 database/              Schema.sql 與 VERSION
-deploy/azure-demo/     已結束的 Azure 展示部署紀錄
 deploy/docker/         Docker 建置檔
 tools/                 資料處理與驗證工具
 docs/                  文件
@@ -147,9 +146,9 @@ docs/                  文件
 
 ## Git 協作
 
-`feature/<area>` → PR → `develop` → PR → `main`，不 force push。規則見 [CONTRIBUTING.md](CONTRIBUTING.md)。
+從 `main` 建立短期分支，透過 PR 合併回 `main`，確認成果已保留後刪除分支。不 force push，規則與發行格式見 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
-`deploy/azure-demo` 是歷史部署分支，不再用來更新線上服務；Azure 工作流程已移到非執行目錄封存。一般建置與資安檢查繼續保留。
+舊 Azure 工作流程已全域停用，部署分支與專用腳本已清理；原設計可由 [歷史版本](https://github.com/MSIT173-03/QMAH/tree/1252a074/deploy/azure-demo) 查閱。一般建置、本地 Docker 與資安檢查繼續保留。
 
 ## 授權與資料來源
 

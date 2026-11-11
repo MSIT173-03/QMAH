@@ -60,7 +60,7 @@ Dependency security 工作流程每週一 UTC 01:00（臺灣 09:00）、相依�
 
 - 本機 Docker Engine 未啟動，因此未執行完整容器啟動、SQL 還原、容器映像／OS 套件掃描；Compose 解析成功不等同整站啟動成功。
 - Azure 展示已停止，沒有重新啟動 VM、部署新程式或驗證舊站登入／付款／寄信。外部 OAuth、郵件、Turnstile 與 AI 服務的有效性需各自管理員確認。
-- 舊 Azure 自我修復腳本的 POSIX 隔離測試移到一般 Build 的 Linux job；本輪本機驗證沒有代替這個 Linux CI job。
+- 舊 Azure 部署腳本與其專用測試已隨展示退役移出目前版本；一般 Build 的 Linux job 繼續驗證現用 Docker 腳本。
 - API 隔離測試會顯示 SQLite 不支援 SQL Server schema 的警告；沒有關閉這些警告，也不把這些結果當成 SQL Server schema 已驗證。
 - 既有第三方登入首次同 Email 綁定仍需評估信箱可信性與原帳號重新驗證，詳見 [登入檢查文件](external-login-checks.md)。套件稽核不會檢查這類業務邏輯。
 - nginx、.NET 與 SQL Server 的映像標籤不等於掃描結果。自行部署前應重新拉取、掃描並決定固定 digest，不能把本頁當成映像已無漏洞的證明。
