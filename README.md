@@ -72,7 +72,7 @@ docker compose up -d
 
 第一次會編譯程式並下載約 40MB 的資料庫備份，通過 SHA-256 校驗後才還原。可用 `docker compose logs -f` 查看進度。完成後開 <http://localhost:8080>，管理後台在 <http://localhost:8080/admin/>。這個流程使用 GitHub 資料庫發行檔，**不需要 Azure 帳號，也不會啟動舊 VM**。
 
-下載不完整不會被當成有效備份。既有但雜湊不符的檔案會先保存為 `QMAH.bak.unverified.*`，不直接刪除。SQL 初始化或還原失敗會明確退出，不會只留下「容器還在跑」的假象。使用者上傳、待審媒體與本機秘密設定不會打包進映像。
+下載不完整不會被當成有效備份。既有但雜湊不符的檔案會先保存為 `QMAH.bak.unverified.*`，不直接刪除。SQL 初始化或還原失敗會明確退出。使用者上傳、待審媒體與本機秘密設定不會打包進映像。
 
 資料庫密碼可用環境變數 `QMAH_SA_PASSWORD` 覆寫，預設值只適用本機。`docker compose down` 停止容器並保留資料。**`docker compose down -v` 會刪除資料庫、上傳檔與登入金鑰**，請先備份。
 
