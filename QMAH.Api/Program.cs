@@ -3,6 +3,7 @@ using System.IO.Compression;
 using System.Security.Claims;
 
 using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
@@ -206,6 +207,8 @@ if (!string.IsNullOrWhiteSpace(googleClientId)
         options.ClientId = googleClientId;
         options.ClientSecret = googleClientSecret;
         options.SignInScheme = IdentityConstants.ExternalScheme;
+        // 依 Email 綁定既有會員前要確認 Google 已驗證該信箱。
+        options.ClaimActions.MapJsonKey("email_verified", "email_verified");
     });
 }
 else
