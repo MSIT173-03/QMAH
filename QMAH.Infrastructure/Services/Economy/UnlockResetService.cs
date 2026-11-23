@@ -23,12 +23,17 @@ public sealed class UnlockResetService(QmahDbContext db)
         var refunded = 0;
         var groups = unlocks
             .Where(item => refund && item.UnlockMethod == "KEY" && item.KeyTransaction is not null)
-            .GroupBy(item => (item.UserId, item.KeyTransaction!.KeyDefinitionId));
+            .GroupBy(item => (item.UserId, item.KeyTransaction!.KeyDefinitionId))
+            .ToList();
+        // 一次載入涉及會員的鑰匙餘額，避免每個群組各查一次資料庫。
+        var memberIds = groups.Select(group => group.Key.UserId).Distinct().ToList();
+        var balances = (await db.UserKeyBalances.Where(item => memberIds.Contains(item.UserId)).ToListAsync(cancellationToken))
+            .ToDictionary(item => (item.UserId, item.KeyDefinitionId));
         foreach (var group in groups)
         {
             var (memberId, keyId) = group.Key;
             var amount = group.Sum(item => Math.Max(1, -item.KeyTransaction!.Amount));
-            var balance = await db.UserKeyBalances.SingleOrDefaultAsync(item => item.UserId == memberId && item.KeyDefinitionId == keyId, cancellationToken);
+            balances.TryGetValue((memberId, keyId), out var balance);
             if (balance is null)
             {
                 balance = new UserKeyBalance { UserId = memberId, KeyDefinitionId = keyId, Balance = 0, UpdatedAt = now };
