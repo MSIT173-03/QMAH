@@ -429,6 +429,13 @@ public sealed class AccountController(
                 || await userManager.IsLockedOutAsync(user))
                 return Redirect(LoginErrorUrl());
 
+            // 提供者未驗證的 Email 可能由他人自行填寫，不能拿來綁定既有會員。
+            if (!bool.TryParse(info.Principal.FindFirstValue("email_verified"), out var emailVerified) || !emailVerified)
+            {
+                logger.LogWarning("{Provider} 的 Email 未經驗證，拒絕綁定既有會員。", providerName);
+                return Redirect(LoginErrorUrl());
+            }
+
             var linkResult = await userManager.AddLoginAsync(user, info);
             if (!linkResult.Succeeded)
                 return Redirect(LoginErrorUrl());

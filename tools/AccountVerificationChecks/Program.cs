@@ -158,11 +158,23 @@ member.EmailConfirmed = false;
 member.Status = "ACTIVE";
 member.PasswordHash = users.PasswordHasher.HashPassword(member, "Original1!");
 signIn.ExternalInfo = new ExternalLoginInfo(new ClaimsPrincipal(new ClaimsIdentity([
-    new Claim(ClaimTypes.Email, member.Email!)], "external")), "Google", "new-google-id", "Google");
+    new Claim(ClaimTypes.Email, member.Email!), new Claim("email_verified", "true")], "external")), "Google", "new-google-id", "Google");
 Check(await controller.GoogleCallback() is RedirectResult { Url: "https://qmah.example/login?googleError=email_verification_required" }
     && users.AddLoginCalls == 0 && signIn.ExternalLogins == 0,
     "未驗證一般會員不能新增同 Email 第三方綁定");
 member.EmailConfirmed = true;
+var verifiedPrincipal = signIn.ExternalInfo.Principal;
+signIn.ExternalInfo = new ExternalLoginInfo(new ClaimsPrincipal(new ClaimsIdentity([
+    new Claim(ClaimTypes.Email, member.Email!), new Claim("email_verified", "false")], "external")), "Google", "new-google-id", "Google");
+Check(await controller.GoogleCallback() is RedirectResult { Url: "https://qmah.example/login?googleError=1" }
+    && users.AddLoginCalls == 0 && users.CreateCalls == 0,
+    "提供者未驗證的 Email 不能綁定既有會員");
+signIn.ExternalInfo = new ExternalLoginInfo(new ClaimsPrincipal(new ClaimsIdentity([
+    new Claim(ClaimTypes.Email, member.Email!)], "external")), "Google", "new-google-id", "Google");
+Check(await controller.GoogleCallback() is RedirectResult { Url: "https://qmah.example/login?googleError=1" }
+    && users.AddLoginCalls == 0 && users.CreateCalls == 0,
+    "缺少 email_verified 時不能綁定既有會員");
+signIn.ExternalInfo = new ExternalLoginInfo(verifiedPrincipal, "Google", "new-google-id", "Google");
 Check(await controller.GoogleCallback() is RedirectResult { Url: "https://qmah.example/member" }
     && users.AddLoginCalls == 1 && users.CreateCalls == 0 && users.LinkedMember?.Id == member.Id,
     "已驗證會員首次同 Email Google 登入綁定原會員，不重複建立會員");
@@ -204,7 +216,7 @@ Check(await controller.GoogleCallback() is RedirectResult { Url: "https://qmah.e
     && users.CreateCalls == 1 && users.AddLoginCalls == 3,
     "無同 Email 會員仍進入建立流程，建立失敗時不綁定或登入");
 signIn.ExternalInfo = new ExternalLoginInfo(new ClaimsPrincipal(new ClaimsIdentity([
-    new Claim(ClaimTypes.Email, member.Email!)], "external")), "Logto", "unlinked-id", "Logto");
+    new Claim(ClaimTypes.Email, member.Email!), new Claim("email_verified", "true")], "external")), "Logto", "unlinked-id", "Logto");
 member.Status = "SUSPENDED";
 Check(await controller.LogtoCallback() is RedirectResult { Url: "https://qmah.example/login?logtoError=1" }
     && users.AddLoginCalls == 3, "停權會員不能新增同 Email 綁定");

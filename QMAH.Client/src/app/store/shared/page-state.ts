@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { NgZone, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { Observable, Subscription, merge, of } from 'rxjs';
+import { EMPTY, Observable, Subscription, merge, of, switchMap } from 'rxjs';
 import { NotificationLive } from '../../core/services/notification-live';
 import { coalescedRefresh } from '../../core/services/coalesced-refresh';
 import { StoreAuth } from './store-auth';
@@ -142,7 +142,11 @@ export function injectSiteData() {
   }), { initialValue: [] });
   // 即時點數／折價券變更合併補讀，不取消正在完成的請求。
   const updates = merge(of(undefined), inject(NotificationLive).economyChanges);
-  const profile = toSignal(coalescedRefresh(updates, () => memberApi.getProfile()));
+  const auth = inject(StoreAuth);
+  // 未登入時不送出注定 401 的 GET /me、/me/coupons。
+  const signedInOnly = <T>(load: () => Observable<T>) => () =>
+    auth.ensureLoaded().pipe(switchMap(() => (auth.status() === 'anonymous' ? EMPTY : load())));
+  const profile = toSignal(coalescedRefresh(updates, signedInOnly(() => memberApi.getProfile())));
 
   return {
     /** 頂部列的主打活動檔期倒數（結束時間寫在前台設定，後端公告沒有結束日期）；公告來源為空時不顯示 */
@@ -154,6 +158,6 @@ export function injectSiteData() {
     /** 頂部公告列顯示的會員點數 */
     points: computed(() => formatNumber(profile()?.pointBalance ?? 0)),
     /** 頂部公告列的折價券清單 */
-    coupons: toSignal(coalescedRefresh(updates, () => memberApi.getCoupons()), { initialValue: [] }),
+    coupons: toSignal(coalescedRefresh(updates, signedInOnly(() => memberApi.getCoupons())), { initialValue: [] }),
   };
 }
