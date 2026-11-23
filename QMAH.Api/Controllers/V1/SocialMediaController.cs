@@ -120,11 +120,15 @@ public sealed class SocialMediaController(
             && await db.SocialPosts.AnyAsync(
                 post => post.Id == asset.PostId.Value && post.Status == "PUBLISHED",
                 cancellationToken);
-        // 留言附圖：圖片沒有掛在貼文上，但被已發布的留言以 [img=識別碼] 引用時，任何人都能看到。
+        // 留言附圖：圖片沒有掛在貼文上，但被圖片擁有者在已發布貼文下的已發布留言以 [img=識別碼] 引用時，任何人都能看到。
+        // 只認擁有者自己的留言，避免他人在留言貼上識別碼就公開別人尚未發布的圖片。
         var marker = $"[img={id:D}]";
         var isCommentAsset = !asset.PostId.HasValue
             && await db.SocialComments.AnyAsync(
-                comment => comment.Status == "PUBLISHED" && comment.Content.Contains(marker),
+                comment => comment.Status == "PUBLISHED"
+                    && comment.UserId == asset.OwnerUserId
+                    && comment.Post.Status == "PUBLISHED"
+                    && comment.Content.Contains(marker),
                 cancellationToken);
         var isOwner = TryGetCurrentUserId(out var userId) && userId == asset.OwnerUserId;
         if (!isPublishedPostAsset && !isCommentAsset && !isOwner)
