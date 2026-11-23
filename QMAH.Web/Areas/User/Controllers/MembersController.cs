@@ -951,6 +951,20 @@ public class MembersController : Controller
             return View(model);
         }
 
+        // 不允許管理員移除自己的 Admin 角色，避免唯一的管理員把自己鎖在後台外。
+        if (user.Id == (await _userManager.GetUserAsync(User))?.Id
+            && model.SelectedRole != "Admin")
+        {
+            model.Email = user.Email ?? "";
+            model.AvailableRoles = availableRoles;
+
+            ModelState.AddModelError(
+                nameof(model.SelectedRole),
+                "不能移除自己的管理員角色。");
+
+            return View(model);
+        }
+
         var currentRoles = await _userManager.GetRolesAsync(user);
 
         // 先移除目前所有角色
