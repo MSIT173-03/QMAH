@@ -11,6 +11,7 @@ ENV PROJECT=${PROJECT} ASPNETCORE_URLS=http://+:8080
 WORKDIR /app
 COPY --from=build /out .
 COPY QMAH.Media /media
-RUN mkdir -p /keys && chown -R $APP_UID /keys /media
+# uploads 由 .dockerignore 排除，先建立目錄，讓新建的 named volume 沿用非 root 擁有者。
+RUN mkdir -p /keys /media/uploads && chown -R $APP_UID /keys /media
 USER $APP_UID
 ENTRYPOINT ["sh", "-c", "exec dotnet ${PROJECT}.dll"]
